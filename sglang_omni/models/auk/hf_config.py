@@ -17,7 +17,18 @@ from sglang_omni.models.auk import constants as C
 logger = logging.getLogger(__name__)
 
 CONFIG_YAML_NAMES = ("config.yaml", "config.yml")
+ReferenceEncoding = Literal["sample", "mean"]
+DEFAULT_REFERENCE_ENCODING: ReferenceEncoding = "sample"
 Quantization = Literal["mlx_q8"]
+
+
+def validate_reference_encoding(reference_encoding: str) -> None:
+    if reference_encoding not in get_args(ReferenceEncoding):
+        raise ValueError(
+            "AuK reference_encoding must be 'sample' or 'mean', "
+            f"got {reference_encoding!r}"
+        )
+
 
 def validate_quantization(quantization: str | None) -> None:
     if quantization is not None and quantization not in get_args(Quantization):

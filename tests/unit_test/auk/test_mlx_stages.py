@@ -74,7 +74,7 @@ def test_stage_handoffs_preserve_requests_and_produce_wire_safe_audio():
     ]
     vae = SimpleNamespace(
         hop_size=4,
-        encode=lambda waveform, lengths, key: (
+        encode=lambda waveform, lengths, key, posterior_mode: (
             mx.random.normal((1, 7, 4), key=key),
             lengths // 4,
         ),
@@ -93,7 +93,11 @@ def test_stage_handoffs_preserve_requests_and_produce_wire_safe_audio():
         for i, (frames, seed) in enumerate(((7, 11), (3, 11), (7, 12)))
     ]
     conditioned = stages.condition_batch(
-        payloads, encoder, vae, (mx.zeros((2,)), mx.ones((1,)))
+        payloads,
+        encoder,
+        vae,
+        (mx.zeros((2,)), mx.ones((1,))),
+        reference_encoding="sample",
     )
     refs = [item.data["ref_latent"] for item in conditioned]
     assert torch.equal(refs[0], refs[1])
@@ -210,6 +214,39 @@ def test_native_engine_rejects_incompatible_precision_before_loading(monkeypatch
             max_batch_size=2,
             max_batch_wait_ms=0,
         )
+
+
+def test_reference_encoding_is_validated_before_device_or_checkpoint_loading(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        stages, "validate_device", Mock(side_effect=AssertionError("resolved device"))
+    )
+    with pytest.raises(ValueError, match="reference_encoding"):
+        stages.create_conditioning_executor(
+            "unused",
+            device="mps",
+            gpu_id=0,
+            dtype="float32",
+            text_encoder_path="unused",
+            max_batch_size=1,
+            max_batch_wait_ms=0,
+            reference_encoding="automatic",
+        )
+
+
+@pytest.mark.parametrize("reference_encoding", ["sample", "mean"])
+def test_native_conditioning_forwards_posterior_policy(monkeypatch, reference_encoding):
+    monkeypatch.setattr("sglang.srt.hardware_backend.mlx.runtime.use_mlx", lambda: True)
+    native = Mock(return_value="native")
+    monkeypatch.setattr(stages, "create_conditioning_executor", native)
+    assert (
+        torch_stages.create_conditioning_executor(
+            "unused", reference_encoding=reference_encoding
+        )
+        == "native"
+    )
+    assert native.call_args.kwargs["reference_encoding"] == reference_encoding
 
 
 @pytest.mark.parametrize("stage_name", ["sample", "decode"])

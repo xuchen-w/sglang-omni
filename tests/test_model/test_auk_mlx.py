@@ -122,31 +122,51 @@ def test_vae_checkpoint_encode_decode_matches_torch_cpu(
         reference = BigVGANFlowVAE(vae_config)
     load_vae_weights(reference, checkpoint)
     reference = reference.float().eval().requires_grad_(False)
+    expected = {}
     with torch.inference_mode():
         shape = reference.audio_encoder(torch.from_numpy(sample)).shape
         noise = rng.standard_normal(
             (shape[0], vae_config.latent_dim, shape[-1])
         ).astype(np.float32)
-        with patch(
-            "sglang_omni.models.auk.vae.torch.randn",
-            return_value=torch.from_numpy(noise),
-        ):
-            latent, valid_lengths = reference.encoding_and_normalization(
-                torch.from_numpy(sample), torch.from_numpy(lengths)
+        for posterior_mode in ("sample", "mean"):
+            with patch(
+                "sglang_omni.models.auk.vae.torch.randn",
+                return_value=torch.from_numpy(noise),
+            ) as draw_noise:
+                latent, valid_lengths = reference.encoding_and_normalization(
+                    torch.from_numpy(sample),
+                    torch.from_numpy(lengths),
+                    posterior_mode=posterior_mode,
+                )
+            if posterior_mode == "mean":
+                draw_noise.assert_not_called()
+            else:
+                draw_noise.assert_called_once()
+            expected[posterior_mode] = (
+                latent.numpy().copy(),
+                valid_lengths.numpy().copy(),
             )
-        expected_latent = latent.numpy().copy()
-        expected_lengths = valid_lengths.numpy().copy()
-        expected_waveform = reference.decode(latent).numpy().copy()
+        expected_waveform = (
+            reference.decode(torch.from_numpy(expected["sample"][0])).numpy().copy()
+        )
     del reference, latent, valid_lengths
     gc.collect()
 
     native = load_vae(checkpoint)
-    actual_latent, actual_lengths = native.encode(
-        mx.array(sample), mx.array(lengths), noise=mx.array(noise)
-    )
-    assert_parity(np.array(actual_latent), expected_latent, atol=2e-4, rtol=2e-3)
-    np.testing.assert_array_equal(np.array(actual_lengths), expected_lengths)
-    waveform = native.decode(mx.array(expected_latent))
+    for posterior_mode, (expected_latent, expected_lengths) in expected.items():
+        with patch.object(
+            mx.random, "normal", side_effect=AssertionError("Unexpected posterior RNG")
+        ):
+            actual_latent, actual_lengths = native.encode(
+                mx.array(sample),
+                mx.array(lengths),
+                noise=mx.array(noise) if posterior_mode == "sample" else None,
+                posterior_mode=posterior_mode,
+            )
+            mx.eval(actual_latent, actual_lengths)
+        assert_parity(np.array(actual_latent), expected_latent, atol=2e-4, rtol=2e-3)
+        np.testing.assert_array_equal(np.array(actual_lengths), expected_lengths)
+    waveform = native.decode(mx.array(expected["sample"][0]))
     assert_parity(np.array(waveform), expected_waveform, atol=3e-4, rtol=3e-3)
 
 

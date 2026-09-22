@@ -5,6 +5,7 @@ from typing import ClassVar
 
 from sglang_omni.config import FactoryArgs, PipelineConfig, StageConfig
 from sglang_omni.models.auk import constants as C
+from sglang_omni.models.auk.hf_config import DEFAULT_REFERENCE_ENCODING
 from sglang_omni.platforms import current_platform
 
 _PKG = "sglang_omni.models.auk"
@@ -43,6 +44,7 @@ class AuKPipelineConfig(PipelineConfig):
                 text_encoder_path=C.DEFAULT_TEXT_ENCODER,
                 max_batch_size=stage_batch_size(8),
                 max_batch_wait_ms=10,
+                reference_encoding=DEFAULT_REFERENCE_ENCODING,
             ),
             gpu=0,
             next=ENGINE_STAGE,

@@ -26,11 +26,14 @@ from sglang_omni.models.auk.flow_matching import (
     request_generator,
 )
 from sglang_omni.models.auk.hf_config import (
+    DEFAULT_REFERENCE_ENCODING,
     AuKDitConfig,
     AuKVAEConfig,
     Quantization,
+    ReferenceEncoding,
     make_runtime_config,
     validate_quantization,
+    validate_reference_encoding,
 )
 from sglang_omni.models.auk.payload_types import AuKState
 from sglang_omni.models.auk.reference_encode import AuKConditionEncoder, build_messages
@@ -220,7 +223,14 @@ def create_preprocessing_executor(
     return SimpleScheduler(preprocess_auk_payload, max_concurrency=max_concurrency)
 
 
-def reference_latent(vae, device, audio, seed=None):
+def reference_latent(
+    vae: BigVGANFlowVAE,
+    device: torch.device | str,
+    audio: np.ndarray | None,
+    seed: int | None = None,
+    *,
+    reference_encoding: ReferenceEncoding,
+) -> tuple[torch.Tensor | None, int]:
     if audio is None:
         return None, 0
     waveform = torch.from_numpy(
@@ -230,12 +240,26 @@ def reference_latent(vae, device, audio, seed=None):
         [waveform.shape[-1] // vae.hop_size * vae.hop_size], device=device
     )
     latent, lengths = vae.encoding_and_normalization(
-        waveform, lengths, generator=request_generator(seed, device)
+        waveform,
+        lengths,
+        generator=(
+            request_generator(seed, device) if reference_encoding == "sample" else None
+        ),
+        posterior_mode=reference_encoding,
     )
     return latent[0], int(lengths[0])
 
 
-def condition_batch(payloads, encoder, vae, fusion, device, dtype):
+def condition_batch(
+    payloads: list[StagePayload],
+    encoder: AuKConditionEncoder,
+    vae: BigVGANFlowVAE,
+    fusion: tuple[torch.Tensor, torch.Tensor],
+    device: torch.device,
+    dtype: torch.dtype,
+    *,
+    reference_encoding: ReferenceEncoding,
+) -> list[StagePayload]:
     started = time.perf_counter()
     states = [load_state(payload, AuKState) for payload in payloads]
     messages = [
@@ -244,7 +268,11 @@ def condition_batch(payloads, encoder, vae, fusion, device, dtype):
     ]
     for state in states:
         state.ref_latent, state.ref_length = reference_latent(
-            vae, device, state.ref_audio, state.seed
+            vae,
+            device,
+            state.ref_audio,
+            state.seed,
+            reference_encoding=reference_encoding,
         )
     with autocast(device, dtype):
         encodings = encoder.encode_batch(
@@ -270,9 +298,11 @@ def create_conditioning_executor(
     max_batch_size: int = 8,
     max_batch_wait_ms: int = 10,
     quantization: Quantization | None = None,
+    reference_encoding: ReferenceEncoding = DEFAULT_REFERENCE_ENCODING,
 ) -> SimpleScheduler:
     from sglang.srt.hardware_backend.mlx.runtime import use_mlx
 
+    validate_reference_encoding(reference_encoding)
     validate_quantization(quantization)
     if use_mlx():
         from sglang_omni.models.auk.mlx import stages as mlx_stages
@@ -286,6 +316,7 @@ def create_conditioning_executor(
             max_batch_size=max_batch_size,
             max_batch_wait_ms=max_batch_wait_ms,
             quantization=quantization,
+            reference_encoding=reference_encoding,
         )
     if quantization is not None:
         raise ValueError("AuK quantization requires the native MLX backend")
@@ -299,7 +330,13 @@ def create_conditioning_executor(
     fusion = load_fusion(checkpoint, str(device))
     return scheduler(
         lambda payloads: condition_batch(
-            payloads, encoder, vae, fusion, device, compute_dtype
+            payloads,
+            encoder,
+            vae,
+            fusion,
+            device,
+            compute_dtype,
+            reference_encoding=reference_encoding,
         ),
         device,
         max_batch_size,

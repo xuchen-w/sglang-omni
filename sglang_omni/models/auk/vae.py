@@ -13,7 +13,12 @@ import torch
 from torch import nn
 from torch.nn.utils import remove_weight_norm, weight_norm
 
-from sglang_omni.models.auk.hf_config import AuKVAEConfig
+from sglang_omni.models.auk.hf_config import (
+    DEFAULT_REFERENCE_ENCODING,
+    AuKVAEConfig,
+    ReferenceEncoding,
+    validate_reference_encoding,
+)
 
 LRELU_SLOPE = 0.1
 
@@ -782,8 +787,11 @@ class BigVGANFlowVAE(nn.Module):
         sample: torch.Tensor,
         sample_lengths: torch.Tensor | None = None,
         generator: torch.Generator | None = None,
+        *,
+        posterior_mode: ReferenceEncoding = DEFAULT_REFERENCE_ENCODING,
     ) -> tuple[torch.Tensor, torch.Tensor]:
         """Encode a waveform to a normalized latent."""
+        validate_reference_encoding(posterior_mode)
         with torch.autocast(device_type=sample.device.type, enabled=False):
             latent_stats = self.audio_encoder(sample.float())
             if sample_lengths is None:
@@ -792,13 +800,16 @@ class BigVGANFlowVAE(nn.Module):
                 ).to(sample.device)
             latent_lens = sample_lengths // self.hop_size
             mean, log_std = latent_stats.chunk(2, 1)
-            noise = torch.randn(
-                mean.shape,
-                device=mean.device,
-                dtype=mean.dtype,
-                generator=generator,
-            )
-            latents = mean + noise * torch.exp(log_std)
+            if posterior_mode == "mean":
+                latents = mean
+            else:
+                noise = torch.randn(
+                    mean.shape,
+                    device=mean.device,
+                    dtype=mean.dtype,
+                    generator=generator,
+                )
+                latents = mean + noise * torch.exp(log_std)
             latents = latents.transpose(1, 2).float()
             latents = (latents - self.global_mean.float()) / torch.sqrt(
                 self.global_log_std.float()

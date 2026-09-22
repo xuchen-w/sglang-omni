@@ -15,8 +15,10 @@ import torch
 from sglang_omni.models.auk import constants as C
 from sglang_omni.models.auk.hf_config import (
     Quantization,
+    ReferenceEncoding,
     make_runtime_config,
     validate_quantization,
+    validate_reference_encoding,
 )
 from sglang_omni.models.auk.mlx.conditioning import AuKMlxConditionEncoder
 from sglang_omni.models.auk.mlx.flow_matching import (
@@ -80,6 +82,8 @@ def condition_batch(
     encoder: AuKMlxConditionEncoder,
     vae: BigVGANFlowVAE,
     fusion: tuple[mx.array, mx.array],
+    *,
+    reference_encoding: ReferenceEncoding,
 ) -> list[StagePayload]:
     started = time.perf_counter()
     states = [load_state(payload, AuKState) for payload in payloads]
@@ -92,7 +96,14 @@ def condition_batch(
             waveform = mx.array(np.asarray(state.ref_audio).reshape(1, 1, -1))
             lengths = mx.array([waveform.shape[-1] // vae.hop_size * vae.hop_size])
             latent, lengths = vae.encode(
-                waveform, lengths, key=request_key(state.seed, stream="reference")
+                waveform,
+                lengths,
+                key=(
+                    request_key(state.seed, stream="reference")
+                    if reference_encoding == "sample"
+                    else None
+                ),
+                posterior_mode=reference_encoding,
             )
             state.ref_latent = cpu_tensor(latent[0])
             state.ref_length = int(lengths[0].item())
@@ -115,8 +126,10 @@ def create_conditioning_executor(
     text_encoder_path: str,
     max_batch_size: int,
     max_batch_wait_ms: int,
+    reference_encoding: ReferenceEncoding,
     quantization: Quantization | None = None,
 ) -> SimpleScheduler:
+    validate_reference_encoding(reference_encoding)
     validate_quantization(quantization)
     validate_device(device, gpu_id)
     compute_dtype = resolve_dtype(dtype)
@@ -133,7 +146,9 @@ def create_conditioning_executor(
     vae = load_vae(checkpoint)
     fusion = load_fusion(checkpoint)
     return scheduler(
-        lambda payloads: condition_batch(payloads, encoder, vae, fusion),
+        lambda payloads: condition_batch(
+            payloads, encoder, vae, fusion, reference_encoding=reference_encoding
+        ),
         max_batch_size,
         max_batch_wait_ms,
     )

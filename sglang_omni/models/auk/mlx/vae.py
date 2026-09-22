@@ -9,7 +9,12 @@ from __future__ import annotations
 import mlx.core as mx
 import mlx.nn as nn
 
-from sglang_omni.models.auk.hf_config import AuKVAEConfig
+from sglang_omni.models.auk.hf_config import (
+    DEFAULT_REFERENCE_ENCODING,
+    AuKVAEConfig,
+    ReferenceEncoding,
+    validate_reference_encoding,
+)
 from sglang_omni.models.auk.mlx.vae_layers import (
     Activation1d,
     AMPBlock1,
@@ -99,24 +104,31 @@ class BigVGANFlowVAE(nn.Module):
         *,
         noise: mx.array | None = None,
         key: mx.array | None = None,
+        posterior_mode: ReferenceEncoding = DEFAULT_REFERENCE_ENCODING,
     ) -> tuple[mx.array, mx.array]:
         """Encode [B, 1, samples] into normalized [B, frames, channels].
 
         Optional posterior noise uses [B, channels, frames], matching Torch.
         """
+        validate_reference_encoding(posterior_mode)
+        if posterior_mode == "mean" and noise is not None:
+            raise ValueError("Posterior noise is only supported in sample mode")
         if sample.ndim != 3 or sample.shape[1] != 1:
             raise ValueError("VAE input must have shape [batch, 1, samples]")
         stats = self.audio_encoder(sample.astype(mx.float32).transpose(0, 2, 1))
         mean, log_std = mx.split(stats, 2, axis=-1)
-        if noise is None:
-            posterior_noise = mx.random.normal(mean.shape, key=key)
+        if posterior_mode == "mean":
+            latents = mean
         else:
-            if noise.shape != (mean.shape[0], mean.shape[2], mean.shape[1]):
+            if noise is None:
+                posterior_noise = mx.random.normal(mean.shape, key=key)
+            elif noise.shape != (mean.shape[0], mean.shape[2], mean.shape[1]):
                 raise ValueError(
                     "Posterior noise must have shape [batch, channels, frames]"
                 )
-            posterior_noise = noise.astype(mx.float32).transpose(0, 2, 1)
-        latents = mean + posterior_noise * mx.exp(log_std)
+            else:
+                posterior_noise = noise.astype(mx.float32).transpose(0, 2, 1)
+            latents = mean + posterior_noise * mx.exp(log_std)
         latents = (latents - self.global_mean) / mx.sqrt(self.global_log_std)
         if sample_lengths is None:
             sample_lengths = mx.full((sample.shape[0],), sample.shape[-1], mx.int32)

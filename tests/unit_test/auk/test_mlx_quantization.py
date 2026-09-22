@@ -406,6 +406,7 @@ def test_conditioning_factory_selects_bundled_or_explicit_encoder(
         text_encoder_path=override or constants.DEFAULT_TEXT_ENCODER,
         max_batch_size=1,
         max_batch_wait_ms=0,
+        reference_encoding="sample",
         quantization="mlx_q8",
     )
     assert encoder.call_args.args == (override or str(root / "conditioner"),)

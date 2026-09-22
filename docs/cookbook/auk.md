@@ -186,6 +186,26 @@ target_seconds = reference_seconds × UTF8_bytes(input) / UTF8_bytes(ref_text)
 
 Explicit `gen_seconds` takes priority and must be positive. Target duration rounds up to 20 ms frames and is capped at 30 seconds by default. To change the cap, set `max_seconds` on both stages: `--preprocessing.factory.max_seconds` and `--auk_engine.factory.max_seconds`.
 
+## Reference encoding policy
+
+Both Torch and native MLX use posterior sampling for reference audio by default,
+matching the original AuK inference recipe. The conditioning-stage option
+`reference_encoding` accepts `sample` or `mean` on either backend:
+
+```bash
+python -m sglang_omni.cli serve --model-path tencent/AuK-Flash \
+  --conditioning.factory.reference_encoding mean
+```
+
+`mean` uses the VAE posterior mean directly, without drawing posterior noise, and
+is deterministic for fixed input and execution settings. It can change the
+generated voice and is not an assumed quality improvement. `sample` keeps posterior
+sampling on both backends. This is a server-level model setting, never selected
+implicitly by the device or quantization mode; requests without reference audio
+are unaffected. Target generation stays stochastic unless a seed is supplied, and
+the reference and target noise streams remain independent in both modes.
+Unseeded requests use local generators rather than advancing the process RNG.
+
 ## Speech Editing
 
 `/generate` accepts a raw AuK instruction in `prompt` and returns JSON. Set `output_modalities` to `["audio"]` and `return_logprob` to `false` (AuK does not produce token log probabilities). Supply reference audio through `metadata.tts_params.ref_audio`:

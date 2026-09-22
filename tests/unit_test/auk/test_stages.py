@@ -8,12 +8,15 @@ import pytest
 import torch
 
 from sglang_omni.models.auk import constants as C
+from sglang_omni.models.auk.flow_matching import request_generator
 from sglang_omni.models.auk.hf_config import AuKRuntimeConfig
 from sglang_omni.models.auk.payload_types import AuKState
 from sglang_omni.models.auk.stages import (
     condition_batch,
     create_auk_engine_executor,
+    create_conditioning_executor,
     decode_batch,
+    reference_latent,
     sample_batch,
     warmup_flow,
 )
@@ -27,6 +30,43 @@ def torch_backend(monkeypatch):
     monkeypatch.setattr(
         "sglang.srt.hardware_backend.mlx.runtime.use_mlx", lambda: False
     )
+
+
+@pytest.mark.parametrize("reference_encoding", ["sample", "mean"])
+@pytest.mark.parametrize("seed", [None, 17])
+def test_reference_policy_preserves_target_and_global_rng(reference_encoding, seed):
+    class PosteriorVAE:
+        encoding_and_normalization = BigVGANFlowVAE.encoding_and_normalization
+        hop_size = 1
+        global_mean = torch.zeros(1)
+        global_log_std = torch.ones(1)
+
+        def audio_encoder(self, waveform):
+            return torch.cat([waveform, torch.zeros_like(waveform)], dim=1)
+
+    vae = PosteriorVAE()
+    audio = np.arange(9, dtype=np.float32)
+    global_state = torch.random.get_rng_state().clone()
+    target_generator = request_generator(seed, "cpu")
+    expected_generator = torch.Generator().set_state(target_generator.get_state())
+    latent, _ = reference_latent(
+        vae, "cpu", audio, seed, reference_encoding=reference_encoding
+    )
+    target = torch.randn(7, 4, generator=target_generator)
+    expected_target = torch.randn(7, 4, generator=expected_generator)
+    torch.testing.assert_close(target, expected_target, rtol=0, atol=0)
+    torch.testing.assert_close(
+        torch.random.get_rng_state(), global_state, rtol=0, atol=0
+    )
+    assert torch.isfinite(latent).all()
+    if seed is not None or reference_encoding == "mean":
+        reference_latent(
+            vae, "cpu", audio[:5], 39, reference_encoding=reference_encoding
+        )
+        repeated, _ = reference_latent(
+            vae, "cpu", audio, seed, reference_encoding=reference_encoding
+        )
+        torch.testing.assert_close(repeated, latent, rtol=0, atol=0)
 
 
 def test_batched_generation_preserves_request_boundaries_and_serializes_audio():
@@ -73,7 +113,15 @@ def test_batched_generation_preserves_request_boundaries_and_serializes_audio():
     ]
 
     rng = torch.random.get_rng_state()
-    conditioned = condition_batch(payloads, encoder, vae, fusion, device, torch.float32)
+    conditioned = condition_batch(
+        payloads,
+        encoder,
+        vae,
+        fusion,
+        device,
+        torch.float32,
+        reference_encoding="sample",
+    )
     states = [AuKState.from_dict(payload.data) for payload in conditioned]
     assert torch.equal(states[0].ref_latent, states[1].ref_latent)
     assert not torch.equal(states[0].ref_latent, states[2].ref_latent)
@@ -155,6 +203,16 @@ def test_unknown_dtype_names_are_rejected_before_the_checkpoint_is_resolved(fiel
         match=rf"AuK {field} must be one of float32, float16, bfloat16, got 'bf16'",
     ):
         create_auk_engine_executor("stub", device="cpu", **{field: "bf16"})
+
+
+def test_unknown_reference_encoding_is_rejected_before_the_checkpoint_is_resolved():
+    with pytest.raises(
+        ValueError,
+        match="AuK reference_encoding must be 'sample' or 'mean', got 'automatic'",
+    ):
+        create_conditioning_executor(
+            "stub", device="cpu", reference_encoding="automatic"
+        )
 
 
 def test_backbone_dtype_is_chosen_when_the_flow_is_loaded(stages, monkeypatch):

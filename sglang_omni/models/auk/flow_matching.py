@@ -4,6 +4,7 @@
 
 from __future__ import annotations
 
+import secrets
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
@@ -17,11 +18,9 @@ from sglang_omni.models.auk.dit import AuKDit
 from sglang_omni.models.auk.step_cuda_graph import AuKStepCudaGraphRunner
 
 
-def request_generator(
-    seed: int | None, device: torch.device | str
-) -> torch.Generator | None:
+def request_generator(seed: int | None, device: torch.device | str) -> torch.Generator:
     if seed is None:
-        return None
+        seed = secrets.randbits(64)
     return torch.Generator(device=device).manual_seed(int(seed))
 
 
