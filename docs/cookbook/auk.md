@@ -55,8 +55,8 @@ retain FP32. For a strict FP32 comparison, set `MLX_ENABLE_TF32=0` before Python
 starts and set all three options to `float32`:
 `--conditioning.factory.dtype`, `--auk_engine.factory.dtype`, and
 `--auk_engine.factory.weight_dtype`. The MLX engine requires matching compute
-and weight precision. This path currently supports BF16 and FP32, not FP16 or
-quantized checkpoints.
+and weight precision. This path supports BF16 and FP32, with optional selective
+8-bit weight quantization described below; FP16 is not supported.
 
 Reference audio uses posterior sampling, matching the original PyTorch recipe.
 Reference and generation noise have independent request-local streams. A fixed
@@ -77,6 +77,76 @@ AUK_MLX_SERVER_URL=http://localhost:8000 \
 Repeat the checkpoint and HTTP tests with the base model. Component parity uses
 identical weights and explicit noise, and complements end-to-end speech-quality
 evaluation; it does not establish quality or throughput on its own.
+
+### Selective 8-bit weights
+
+For a smaller resident model, select `mlx_q8` on both the conditioning and
+sampling stages. It quantizes DiT linear matrices and Qwen text matrices,
+including the text embedding, using MLX affine groups of 64 values. The audio
+encoder remains floating; the VAE, hidden-state fusion and rotary frequencies
+retain their floating precision. Quantization is explicit and does not change
+the sampling schedule or enable 4-bit weights.
+
+Convert the original checkpoints once to avoid quantizing them on each startup:
+
+```bash
+python -m sglang_omni.models.auk.mlx.convert \
+  --model-path tencent/AuK-Flash \
+  --text-encoder-path Qwen/Qwen2.5-Omni-3B \
+  --output-path ./AuK-Flash-mlx-q8 \
+  --dtype bfloat16 --quantization mlx_q8
+
+SGLANG_USE_MLX=1 python -m sglang_omni.cli serve \
+  --model-path ./AuK-Flash-mlx-q8 --port 8000 \
+  --conditioning.factory.quantization mlx_q8 \
+  --auk_engine.factory.quantization mlx_q8
+```
+
+The server discovers the bundled `conditioner/` automatically unless an explicit
+`text_encoder_path` override is supplied. Replace the source checkpoint with
+`tencent/AuK` for the base model. The same two quantization options also work
+directly with original checkpoints; those are converted tensor by tensor at
+startup. Preconverted weights avoid that repeated work.
+
+The converter writes ordinary `config.json`, safetensors shards and their index,
+preserves the original AuK configuration and processor assets, and copies the
+VAE checkpoint unchanged. A versioned `mlx_artifact` entry identifies native
+tensor layouts, source, precision and quantization. The original weights remain
+the conversion source. Other MLX layouts, including all-tower quantized Thinker
+artifacts, are not accepted as conversion inputs.
+
+Conversion reads one tensor or bounded row slices at a time and does not load a
+floating model. `--shard-size-mb` and `--chunk-size-mb` default to 256 and 32.
+A single output tensor can exceed the shard limit; row slicing bounds its
+temporary floating input. An existing destination is never overwritten.
+
+Omit `--quantization` to export a floating native artifact. For FP32 artifacts,
+use `--dtype float32` during conversion and set all three serving precision
+options listed above to `float32`. Serving precision and quantization must match
+the artifact metadata. Compare speech quality with the floating path before
+choosing quantization for a workload; reduced memory does not imply lower
+latency or identical audio.
+
+`SGLANG_MLX_CACHE_LIMIT_GB` can set a nonnegative MLX allocator-cache limit in GB
+before serving stages load their models. When unset, the MLX default is preserved.
+This limits reusable cached allocations, not the memory occupied by active model
+weights or request tensors.
+
+Verify a local BF16 q8 artifact against on-load quantization of the same original
+checkpoints, without downloads:
+
+```bash
+AUK_MLX_CHECKPOINT=/path/to/AuK-Flash \
+AUK_QWEN_CHECKPOINT=/path/to/Qwen2.5-Omni-3B \
+AUK_MLX_QUANTIZED_CHECKPOINT=/path/to/AuK-Flash-mlx-q8 \
+MLX_ENABLE_TF32=0 SGLANG_MLX_CACHE_LIMIT_GB=0.5 \
+  python -m pytest tests/test_model/test_auk_mlx_quantization.py -q
+```
+
+Repeat with the matching base checkpoint and artifact. Models load sequentially;
+the regression checks text/audio hidden states, fused conditioning, short
+fixed-noise DiT sampling, and the unchanged VAE file. It does not measure speech
+quality or substitute for full-schedule evaluation.
 
 ## Speech Generation
 

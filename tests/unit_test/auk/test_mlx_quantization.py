@@ -28,6 +28,7 @@ from sglang_omni.models.auk.dit import AuKDit as TorchDiT
 from sglang_omni.models.auk.flow_matching import AuKFlowMatching as TorchFlow
 from sglang_omni.models.auk.mlx import conditioning, loader
 from sglang_omni.models.auk.mlx.conditioning import AuKMlxConditionEncoder
+from sglang_omni.models.auk.mlx.convert import convert_checkpoint
 from sglang_omni.models.auk.mlx.flow_matching import AuKSampleItem
 from sglang_omni.models.auk.mlx.quantization import (
     ARTIFACT_FORMAT,
@@ -332,6 +333,52 @@ def test_negative_native_cache_limit_fails_before_download(monkeypatch):
         stages.create_decode_executor(
             "unused", device="mps", gpu_id=0, max_batch_size=1, max_batch_wait_ms=0
         )
+
+
+@pytest.mark.parametrize("quantization", [None, "mlx_q8"])
+@pytest.mark.parametrize("dtype", ["float32", "bfloat16"])
+def test_converter_roundtrip_preserves_conditioning_and_generation(
+    flow_checkpoint, conditioner_checkpoint, tmp_path, quantization, dtype
+):
+    output = convert_checkpoint(
+        str(flow_checkpoint),
+        str(tmp_path / "converted"),
+        text_encoder_path=str(conditioner_checkpoint),
+        dtype=dtype,
+        quantization=quantization,
+        shard_bytes=4096,
+        chunk_bytes=1024,
+    )
+    compute = getattr(mx, dtype)
+    original_conditioner = AuKMlxConditionEncoder(
+        str(conditioner_checkpoint), dtype=compute, quantization=quantization
+    )
+    restored_conditioner = AuKMlxConditionEncoder(
+        str(output / "conditioner"), dtype=compute, quantization=quantization
+    )
+    ids = np.array([[2, 120, 120, 120, 3]])
+    mask = np.ones_like(ids)
+    features = np.random.default_rng(9).normal(size=(1, 8, 11)).astype(np.float32)
+    feature_mask = np.ones((1, 11))
+    original_hidden = original_conditioner.model(ids, mask, features, feature_mask)
+    restored_hidden = restored_conditioner.model(ids, mask, features, feature_mask)
+    np.testing.assert_array_equal(np.array(restored_hidden), np.array(original_hidden))
+    original_flow = loader.load_flow(str(flow_checkpoint), compute, quantization)
+    restored_flow = loader.load_flow(str(output), compute, quantization)
+    item = AuKSampleItem(
+        conditioning=original_hidden[0, -1],
+        text_mask=mx.ones((5,), dtype=mx.bool_),
+        target_frames=5,
+        seed=7,
+    )
+    np.testing.assert_array_equal(
+        np.array(restored_flow.sample(item, steps=2, cfg_strength=2)),
+        np.array(original_flow.sample(item, steps=2, cfg_strength=2)),
+    )
+    for value, expected in zip(
+        loader.load_fusion(str(output)), loader.load_fusion(str(flow_checkpoint))
+    ):
+        np.testing.assert_array_equal(np.array(value), np.array(expected))
 
 
 @pytest.mark.parametrize("override", [None, "custom-conditioner"])
