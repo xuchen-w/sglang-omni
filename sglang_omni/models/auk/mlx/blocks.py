@@ -9,6 +9,8 @@ import math
 import mlx.core as mx
 import mlx.nn as nn
 
+from sglang_omni.models.auk.mlx.quantization import layer_dtype
+
 
 class RMSNorm(nn.Module):
     """RMS normalization with the FP32 accumulation epsilon."""
@@ -60,7 +62,7 @@ class TimestepEmbedding(nn.Module):
         )
         angles = 1000 * timestep.astype(mx.float32)[:, None] * frequencies[None, :]
         hidden = mx.concatenate([mx.sin(angles), mx.cos(angles)], axis=-1)
-        hidden = hidden.astype(self.time_mlp[0].weight.dtype)
+        hidden = hidden.astype(layer_dtype(self.time_mlp[0]))
         for layer in self.time_mlp:
             hidden = layer(hidden)
         return hidden

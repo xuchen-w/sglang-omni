@@ -32,6 +32,7 @@ from sglang_omni.models.auk.mlx.flow_matching import (
     fuse_hidden_states,
     request_key,
 )
+from sglang_omni.models.auk.mlx.quantization import prepare_weight
 
 
 @pytest.fixture(params=["cpu", "gpu"])
@@ -71,11 +72,14 @@ def models(compute_device) -> tuple[TorchFlow, AuKFlowMatching]:
         reference.transformer.rotary_embed.inv_freq.to(torch.bfloat16).float()
     )
     model = AuKFlowMatching(AuKDit(**config), num_llm_layers=2)
-    weights = {
-        key: mx.array(value.detach().numpy())
-        for key, value in reference.state_dict().items()
-    }
-    model.load_weights(list(model.sanitize(weights).items()), strict=True)
+    weights = {}
+    for key, value in reference.state_dict().items():
+        weights.update(
+            prepare_weight(
+                key, value, dtype=mx.float32, component="flow", quantization=None
+            )
+        )
+    model.load_weights(list(weights.items()), strict=True)
     model.eval()
     return reference, model
 

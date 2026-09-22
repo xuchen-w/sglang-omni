@@ -39,6 +39,7 @@ class AuKPipelineConfig(PipelineConfig):
             factory=FactoryArgs(
                 device=current_platform.device_type,
                 dtype="bfloat16",
+                quantization=None,
                 text_encoder_path=C.DEFAULT_TEXT_ENCODER,
                 max_batch_size=stage_batch_size(8),
                 max_batch_wait_ms=10,
@@ -53,6 +54,7 @@ class AuKPipelineConfig(PipelineConfig):
             factory=FactoryArgs(
                 device=current_platform.device_type,
                 dtype="bfloat16",
+                quantization=None,
                 nfe=C.DEFAULT_NFE,
                 enable_dit_fused_qk_norm_rope=True,
                 cfg_strength=C.DEFAULT_CFG_STRENGTH,

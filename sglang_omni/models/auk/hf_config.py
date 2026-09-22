@@ -8,7 +8,7 @@ import logging
 import math
 from dataclasses import dataclass, field, fields
 from pathlib import Path
-from typing import Any, TypeVar
+from typing import Any, Literal, TypeVar, get_args
 
 from omegaconf import OmegaConf
 
@@ -17,6 +17,14 @@ from sglang_omni.models.auk import constants as C
 logger = logging.getLogger(__name__)
 
 CONFIG_YAML_NAMES = ("config.yaml", "config.yml")
+Quantization = Literal["mlx_q8"]
+
+def validate_quantization(quantization: str | None) -> None:
+    if quantization is not None and quantization not in get_args(Quantization):
+        raise ValueError(
+            f"AuK MLX quantization must be None or {' or '.join(get_args(Quantization))}"
+        )
+
 
 SectionT = TypeVar("SectionT", bound="FromCheckpointSection")
 

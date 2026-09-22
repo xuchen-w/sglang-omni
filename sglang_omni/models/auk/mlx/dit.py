@@ -16,6 +16,7 @@ from sglang_omni.models.auk.mlx.blocks import (
     RotaryEmbedding,
     TimestepEmbedding,
 )
+from sglang_omni.models.auk.mlx.quantization import layer_dtype
 
 
 class AuKDit(nn.Module):
@@ -51,7 +52,7 @@ class AuKDit(nn.Module):
 
     @property
     def dtype(self) -> mx.Dtype:
-        return self.proj_out.weight.dtype
+        return layer_dtype(self.proj_out)
 
     def project_text(self, text: mx.array) -> mx.array:
         return self.txt_norm(self.txt_proj(text))

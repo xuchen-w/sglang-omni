@@ -28,7 +28,9 @@ from sglang_omni.models.auk.flow_matching import (
 from sglang_omni.models.auk.hf_config import (
     AuKDitConfig,
     AuKVAEConfig,
+    Quantization,
     make_runtime_config,
+    validate_quantization,
 )
 from sglang_omni.models.auk.payload_types import AuKState
 from sglang_omni.models.auk.reference_encode import AuKConditionEncoder, build_messages
@@ -267,9 +269,11 @@ def create_conditioning_executor(
     text_encoder_path: str = C.DEFAULT_TEXT_ENCODER,
     max_batch_size: int = 8,
     max_batch_wait_ms: int = 10,
+    quantization: Quantization | None = None,
 ) -> SimpleScheduler:
     from sglang.srt.hardware_backend.mlx.runtime import use_mlx
 
+    validate_quantization(quantization)
     if use_mlx():
         from sglang_omni.models.auk.mlx import stages as mlx_stages
 
@@ -281,7 +285,10 @@ def create_conditioning_executor(
             text_encoder_path=text_encoder_path,
             max_batch_size=max_batch_size,
             max_batch_wait_ms=max_batch_wait_ms,
+            quantization=quantization,
         )
+    if quantization is not None:
+        raise ValueError("AuK quantization requires the native MLX backend")
     compute_dtype = resolve_dtype(field="dtype", name=dtype)
     device = resolve_concrete_device(device, gpu_id)
     checkpoint = resolve_checkpoint(model_path)
@@ -344,6 +351,7 @@ def create_auk_engine_executor(
     enable_dit_torch_compile: bool = False,
     enable_dit_cuda_graph: bool = False,
     dit_cuda_graph_capture_shapes: Sequence[Sequence[int]] | None = None,
+    quantization: Quantization | None = None,
 ) -> SimpleScheduler:
     """Build the DiT sampling stage.
 
@@ -354,6 +362,7 @@ def create_auk_engine_executor(
     """
     from sglang.srt.hardware_backend.mlx.runtime import use_mlx
 
+    validate_quantization(quantization)
     if use_mlx():
         from sglang_omni.models.auk.mlx import stages as mlx_stages
 
@@ -369,7 +378,10 @@ def create_auk_engine_executor(
             max_seconds=max_seconds,
             max_batch_size=max_batch_size,
             max_batch_wait_ms=max_batch_wait_ms,
+            quantization=quantization,
         )
+    if quantization is not None:
+        raise ValueError("AuK quantization requires the native MLX backend")
     # Named dtypes are checked before resolve_checkpoint, which downloads.
     compute_dtype = resolve_dtype(field="dtype", name=dtype)
     backbone_dtype = resolve_dtype(field="weight_dtype", name=weight_dtype)

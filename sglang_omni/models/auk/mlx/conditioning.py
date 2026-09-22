@@ -4,13 +4,11 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import mlx.core as mx
 import mlx.nn as nn
 import numpy as np
-from safetensors import safe_open
 from transformers import (
     Qwen2_5OmniConfig,
     Qwen2_5OmniProcessor,
@@ -18,7 +16,10 @@ from transformers import (
     Qwen2_5OmniThinkerConfig,
 )
 
+from sglang_omni.models.auk.hf_config import Quantization, validate_quantization
 from sglang_omni.models.auk.mlx.conditioning_audio import AuKMlxAudioEncoder
+from sglang_omni.models.auk.mlx.loader import MLX_DTYPES, load_component_weights
+from sglang_omni.models.auk.mlx.quantization import layer_dtype, quantize_model
 from sglang_omni.utils.checkpoint import resolve_checkpoint
 
 
@@ -49,8 +50,8 @@ class TextAttention(nn.Module):
     def __call__(
         self, hidden: mx.array, mask: mx.array, cos: mx.array, sin: mx.array
     ) -> mx.array:
-        compute_dtype = self.q_proj.weight.dtype
-        hidden = hidden.astype(compute_dtype)
+        dtype = layer_dtype(self.q_proj)
+        hidden = hidden.astype(dtype)
         batch, length, _ = hidden.shape
         query, key, value = (
             projection(hidden)
@@ -83,7 +84,7 @@ class TextMLP(nn.Module):
         )
 
     def __call__(self, hidden: mx.array) -> mx.array:
-        hidden = hidden.astype(self.gate_proj.weight.dtype)
+        hidden = hidden.astype(layer_dtype(self.gate_proj))
         return self.down_proj(nn.silu(self.gate_proj(hidden)) * self.up_proj(hidden))
 
 
@@ -208,42 +209,26 @@ class AuKMlxConditionModel(nn.Module):
 
 
 class AuKMlxConditionEncoder:
-    def __init__(self, model_path: str, *, dtype: mx.Dtype) -> None:
-        if dtype not in (mx.float32, mx.bfloat16):
+    def __init__(
+        self,
+        model_path: str,
+        *,
+        dtype: mx.Dtype,
+        quantization: Quantization | None = None,
+    ) -> None:
+        validate_quantization(quantization)
+        if dtype not in MLX_DTYPES.values():
             raise ValueError("AuK MLX conditioning supports float32 and bfloat16")
         path = Path(resolve_checkpoint(model_path))
         config = Qwen2_5OmniConfig.from_pretrained(path).thinker_config
         self.processor = Qwen2_5OmniProcessor.from_pretrained(path)
         self.model = AuKMlxConditionModel(config)
-        index = path / "model.safetensors.index.json"
-        if index.is_file():
-            weight_map = json.loads(index.read_text())["weight_map"]
-            files = sorted(
-                {
-                    filename
-                    for name, filename in weight_map.items()
-                    if name.startswith(("thinker.model.", "thinker.audio_tower."))
-                }
-            )
-        else:
-            files = ["model.safetensors"]
-        weights = []
-        for filename in files:
-            with safe_open(path / filename, framework="pt", device="cpu") as checkpoint:
-                for name in checkpoint.keys():
-                    if not name.startswith(("thinker.model.", "thinker.audio_tower.")):
-                        continue
-                    if name.endswith(
-                        ("audio_bos_eos_token.weight", "rotary_emb.inv_freq")
-                    ):
-                        continue
-                    tensor = checkpoint.get_tensor(name)
-                    value = mx.array(tensor.float().numpy()).astype(dtype)
-                    if name.endswith(("conv1.weight", "conv2.weight")):
-                        value = value.transpose(0, 2, 1)
-                    mx.eval(value)
-                    weights.append((name.removeprefix("thinker."), value))
-        self.model.load_weights(weights, strict=True)
+        weights = load_component_weights(
+            path, component="conditioner", dtype=dtype, quantization=quantization
+        )
+        if quantization is not None:
+            quantize_model(self.model, component="conditioner")
+        self.model.load_weights(list(weights.items()), strict=True)
         del weights
         self.model.eval()
         mx.eval(self.model.parameters())

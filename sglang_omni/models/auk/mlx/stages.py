@@ -6,13 +6,18 @@ from __future__ import annotations
 import time
 from collections import defaultdict
 from collections.abc import Callable, Sequence
+from pathlib import Path
 
 import mlx.core as mx
 import numpy as np
 import torch
 
 from sglang_omni.models.auk import constants as C
-from sglang_omni.models.auk.hf_config import make_runtime_config
+from sglang_omni.models.auk.hf_config import (
+    Quantization,
+    make_runtime_config,
+    validate_quantization,
+)
 from sglang_omni.models.auk.mlx.conditioning import AuKMlxConditionEncoder
 from sglang_omni.models.auk.mlx.flow_matching import (
     AuKFlowMatching,
@@ -26,6 +31,10 @@ from sglang_omni.models.auk.mlx.loader import (
     load_vae,
     resolve_dtype,
     validate_device,
+)
+from sglang_omni.models.auk.mlx.quantization import (
+    CONDITIONER_DIRNAME,
+    read_artifact_config,
 )
 from sglang_omni.models.auk.mlx.vae import BigVGANFlowVAE
 from sglang_omni.models.auk.payload_types import AuKState
@@ -106,11 +115,21 @@ def create_conditioning_executor(
     text_encoder_path: str,
     max_batch_size: int,
     max_batch_wait_ms: int,
+    quantization: Quantization | None = None,
 ) -> SimpleScheduler:
+    validate_quantization(quantization)
     validate_device(device, gpu_id)
     compute_dtype = resolve_dtype(dtype)
     checkpoint = resolve_checkpoint(model_path)
-    encoder = AuKMlxConditionEncoder(text_encoder_path, dtype=compute_dtype)
+    bundled = (
+        read_artifact_config(checkpoint, component="flow") is not None
+        and text_encoder_path == C.DEFAULT_TEXT_ENCODER
+    )
+    encoder = AuKMlxConditionEncoder(
+        str(Path(checkpoint) / CONDITIONER_DIRNAME) if bundled else text_encoder_path,
+        dtype=compute_dtype,
+        quantization=quantization,
+    )
     vae = load_vae(checkpoint)
     fusion = load_fusion(checkpoint)
     return scheduler(
@@ -176,7 +195,9 @@ def create_auk_engine_executor(
     max_seconds: float,
     max_batch_size: int,
     max_batch_wait_ms: int,
+    quantization: Quantization | None = None,
 ) -> SimpleScheduler:
+    validate_quantization(quantization)
     validate_device(device, gpu_id)
     compute_dtype = resolve_dtype(dtype)
     storage_dtype = resolve_dtype(weight_dtype)
@@ -184,7 +205,7 @@ def create_auk_engine_executor(
         raise ValueError("AuK native MLX requires matching dtype and weight_dtype")
     checkpoint = resolve_checkpoint(model_path)
     config = make_runtime_config(checkpoint)
-    flow = load_flow(checkpoint, storage_dtype)
+    flow = load_flow(checkpoint, storage_dtype, quantization)
     max_frames = config.seconds_to_frames(max_seconds)
     sampling = dict(
         steps=C.FLASH_NFE if config.is_flash else nfe,

@@ -88,19 +88,6 @@ class AuKFlowMatching(nn.Module):
         self.layer_weights = mx.zeros((num_llm_layers,))
         self.layer_scale = mx.ones((1,))
 
-    @staticmethod
-    def sanitize(weights: dict[str, mx.array]) -> dict[str, mx.array]:
-        return {
-            name: (
-                value.transpose(0, 2, 1)
-                if name.endswith(
-                    ("conv_pos_embed.conv1d.0.weight", "conv_pos_embed.conv1d.2.weight")
-                )
-                else value
-            )
-            for name, value in weights.items()
-        }
-
     def sample(
         self,
         item: AuKSampleItem,
