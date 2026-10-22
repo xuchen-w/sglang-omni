@@ -11,6 +11,7 @@ import auk_golden
 import check_golden
 import check_model_golden
 import pytest
+import voxtral_golden
 
 CLIP = {
     "text": "hello",
@@ -19,6 +20,7 @@ CLIP = {
     "finish_reason": "stop",
 }
 METRICS = {"wer_en": 0.03, "cer_zh": 0.06, "mer_mixed": 0.16}
+SPEECH = {"prompt_ids": "7 8 9", "finish_reason": "stop", "codes": ["1 2", "3 4"]}
 
 
 def golden(clip_count: int = 10) -> dict:
@@ -209,6 +211,46 @@ def test_auk_native_failure_and_invalid_requests_cannot_pass(
         auk_golden.check(auk_manifest, auk_runtime, tmp_path, "Test chip", None, None)
 
 
+def speech_golden(case_ids: tuple[str, ...] = ("en", "fr")) -> dict:
+    return {
+        "model": "v",
+        "kind": "voxtral_tts",
+        "cases": {case_id: {} for case_id in case_ids},
+        "devices": {"Apple M5": {"metrics": {}, "clips": {"en": SPEECH, "fr": SPEECH}}},
+    }
+
+
+def test_a_recorded_chip_requires_every_voxtral_code() -> None:
+    same = {"en": SPEECH, "fr": SPEECH}
+    assert voxtral_golden.check(speech_golden(), "Apple M5", same)[1] == []
+    changed = {
+        "en": {**SPEECH, "codes": ["1 2", "3 0"]},
+        "fr": {**SPEECH, "codes": ["1 2"], "finish_reason": "length"},
+    }
+    failures = voxtral_golden.check(speech_golden(), "Apple M5", changed)[1]
+    assert failures == ["`en` differs from frame 1", "`fr` has frame count 1, not 2"]
+
+
+def test_another_chip_is_held_to_voxtral_prompt_ids() -> None:
+    sampled = {"en": {**SPEECH, "codes": ["5 6"]}, "fr": SPEECH}
+    assert voxtral_golden.check(speech_golden(), "Apple M4 Pro", sampled)[1] == []
+    retokenized = {"en": {**SPEECH, "prompt_ids": "7 8"}, "fr": SPEECH}
+    failures = voxtral_golden.check(speech_golden(), "Apple M4 Pro", retokenized)[1]
+    assert failures == ["`en` has other prompt ids than Apple M5's"]
+
+
+@pytest.mark.parametrize("device", ["Apple M5", "Apple M4 Pro"])
+def test_a_voxtral_case_without_golden_outputs_fails(device: str) -> None:
+    results = {"en": SPEECH, "fr": SPEECH, "de": SPEECH}
+    golden = speech_golden(("en", "fr", "de"))
+    failures = voxtral_golden.check(golden, device, results)[1]
+    assert failures == ["`de` has no golden output"]
+    empty = {**speech_golden(), "devices": {}}
+    assert voxtral_golden.check(empty, "Apple M5", results)[1] == [
+        "the golden file has no outputs"
+    ]
+
+
 @pytest.mark.parametrize("golden_filename", ["auk.json", "auk-flash.json"])
 def test_auk_cli_dispatch_records_and_checks_waveforms(
     tmp_path: Path,
@@ -255,3 +297,73 @@ def test_auk_cli_dispatch_records_and_checks_waveforms(
     with pytest.raises(SystemExit) as changed:
         check_golden.run(check_model_golden.transcribe_with_tool)
     assert changed.value.code == 1
+
+
+def test_voxtral_cli_dispatch_records_and_checks_audio_codes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Voxtral speech requests must reach the seeded code checker, not ASR scoring."""
+    runtime_directory = tmp_path / "runtime"
+    runtime_directory.mkdir()
+    executable = runtime_directory / "voxtral_tts_synthesize"
+    executable.write_text(
+        f"#!{sys.executable}\n"
+        "import argparse, json, pathlib\n"
+        "parser = argparse.ArgumentParser()\n"
+        "for flag in ('model-path', 'text', 'voice', 'seed', 'max-new-tokens', 'codes-output'):\n"
+        "    parser.add_argument('--' + flag, required=True)\n"
+        "arguments = parser.parse_args()\n"
+        "pathlib.Path(arguments.codes_output).write_text(json.dumps(dict(\n"
+        "    prompt_ids=[7, 8, 9], codes=[[1, 2], [3, 4]])))\n"
+        "print(json.dumps(dict(finish_reason='stop')))\n"
+    )
+    executable.chmod(0o755)
+    manifest = json.loads(
+        (
+            Path(__file__).parent / "model_golden" / "voxtral-4b-tts-2603.json"
+        ).read_text()
+    )
+    manifest["devices"] = {}
+    golden_path = tmp_path / "voxtral.json"
+    golden_path.write_text(json.dumps(manifest))
+    output_directory = tmp_path / "outputs"
+    arguments = [
+        "check_model_golden",
+        "--runtime-bin",
+        str(runtime_directory),
+        "--data-root",
+        str(tmp_path),
+        "--golden",
+        str(golden_path),
+        "--outputs",
+        str(output_directory),
+    ]
+    monkeypatch.setattr(check_golden, "chip", lambda: "Test chip")
+    monkeypatch.setattr(sys, "argv", arguments + ["--write"])
+    check_golden.run(check_model_golden.transcribe_with_tool)
+    exported = json.loads((output_directory / golden_path.name).read_text())
+    written = json.loads(golden_path.read_text())
+    assert written["devices"]["Test chip"]["clips"] == exported["clips"]
+    assert set(exported["clips"]) == set(manifest["cases"])
+    assert exported["metrics"] == {}
+
+    monkeypatch.setattr(sys, "argv", arguments)
+    with pytest.raises(SystemExit) as identical:
+        check_golden.run(check_model_golden.transcribe_with_tool)
+    assert identical.value.code == 0
+    first_case = next(iter(manifest["cases"]))
+    written["devices"]["Test chip"]["clips"][first_case]["codes"][0] = "9 9"
+    golden_path.write_text(json.dumps(written))
+    with pytest.raises(SystemExit) as changed:
+        check_golden.run(check_model_golden.transcribe_with_tool)
+    assert changed.value.code == 1
+
+    monkeypatch.setattr(check_golden, "chip", lambda: "Another chip")
+    with pytest.raises(SystemExit) as other_chip:
+        check_golden.run(check_model_golden.transcribe_with_tool)
+    assert other_chip.value.code == 0
+    written["devices"]["Test chip"]["clips"][first_case]["prompt_ids"] = "1 2"
+    golden_path.write_text(json.dumps(written))
+    with pytest.raises(SystemExit) as retokenized:
+        check_golden.run(check_model_golden.transcribe_with_tool)
+    assert retokenized.value.code == 1

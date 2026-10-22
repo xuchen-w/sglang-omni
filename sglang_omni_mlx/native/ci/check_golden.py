@@ -4,6 +4,7 @@
 Greedy decoding follows each Apple chip's GPU arithmetic, so a golden file keeps
 exact outputs per chip; other chips are gated on error rates within tolerance.
 Silero VAD and Sortformer golden files are checked within kernel tolerances.
+Voxtral TTS golden files hold seeded speech requests' codes, exact per chip.
 """
 
 from __future__ import annotations
@@ -24,6 +25,7 @@ TranscribeCorpus = Callable[[Path, Path, dict, dict[str, dict]], dict[str, dict]
 import auk_golden
 import sortformer_golden
 import vad_golden
+import voxtral_golden
 
 CI_DIRECTORY = Path(__file__).resolve().parent
 COMPARED_FIELDS = ("text", "language", "generated_token_count", "finish_reason")
@@ -280,18 +282,24 @@ def run(transcribe_corpus: TranscribeCorpus) -> None:
         report(
             *sortformer_golden.check(golden, arguments.runtime_bin, arguments.data_root)
         )
+    elif golden.get("kind") == "voxtral_tts":
+        results = voxtral_golden.synthesize_cases(
+            arguments.runtime_bin,
+            model_directory(arguments.data_root, golden["model"]),
+            golden["cases"],
+        )
+        metrics = {}
     else:
-        pass
-    results = transcribe_corpus(
-        arguments.runtime_bin, arguments.data_root, golden, manifest
-    )
-    metrics = quality(
-        manifest,
-        {
-            clip_id: spoken_text(row["text"], golden.get("model_kind"))
-            for clip_id, row in results.items()
-        },
-    )
+        results = transcribe_corpus(
+            arguments.runtime_bin, arguments.data_root, golden, manifest
+        )
+        metrics = quality(
+            manifest,
+            {
+                clip_id: spoken_text(row["text"], golden.get("model_kind"))
+                for clip_id, row in results.items()
+            },
+        )
     device = chip()
 
     if arguments.outputs:
@@ -318,7 +326,10 @@ def run(transcribe_corpus: TranscribeCorpus) -> None:
         return
     else:
         pass
-    report(*check(golden, device, results, metrics))
+    if golden.get("kind") == "voxtral_tts":
+        report(*voxtral_golden.check(golden, device, results))
+    else:
+        report(*check(golden, device, results, metrics))
 
 
 def transcribe_qwen3_asr(
