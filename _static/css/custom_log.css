@@ -1,0 +1,45 @@
+.output_area {
+    color: #615656;
+}
+
+table.autosummary td {
+    width: 50%;
+}
+
+img.align-center {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.output_area.stderr {
+    color: #d3d3d3 !important;
+}
+
+.output_area.stdout {
+    color: #d3d3d3 !important;
+}
+
+div.output_area.stderr {
+    color: #d3d3d3 !important;
+}
+
+div.output_area.stdout {
+    color: #d3d3d3 !important;
+}
+
+/* sidebar logo width */
+img.logo__image,
+.sidebar-logo {
+    width: 200px; /* 改成你想要的宽度,也可用 60% 等 */
+    max-width: 100%;
+    height: auto;
+}
+
+/* Anti-flash: hide sidebar sub-nav of non-active groups before
+   sidebar_company_toggle.js runs. The server renders <details open="open">
+   for every group, which would otherwise flash expanded on first paint.
+   The JS adds .js-ready to <nav class="bd-links"> after collapsing groups. */
+nav.bd-links:not(.js-ready) li.has-children:not(.current):not(.active) > details > ul {
+    display: none !important;
+}

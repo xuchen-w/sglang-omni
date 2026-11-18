@@ -1,0 +1,1394 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Qwen3-ASR &#8212; SGLang</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/styles/sphinx-book-theme.css?v=4418a689" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom_log.css?v=3b484c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/custom_log.css?v=3b484c19" />
+    <link rel="stylesheet" type="text/css" href="../_static/css/voxt_anim.css?v=cf61687c" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="../_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+
+    <script src="../_static/documentation_options.js?v=7f7c277e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=ccdb6887"></script>
+    <script src="../_static/scripts/sphinx-book-theme.js?v=fab101a9"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'cookbook/qwen3_asr';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <script src="../_static/js/sidebar_company_toggle.js?v=4014cbb0"></script>
+    <script src="../_static/js/qwen3_omni_server_generator.js?v=d7738e8a"></script>
+    <script src="../_static/js/ming_omni_server_generator.js?v=7979a72f"></script>
+    <script src="../_static/js/voxt_anim.js?v=29b2ca9c"></script>
+    <link rel="icon" href="../_static/logo.ico"/>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="OpenMOSS" href="companies/openmoss.html" />
+    <link rel="prev" title="Qwen3-Omni" href="qwen3_omni.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="0.2.0" />
+    <meta name="docbuild:last-update" content="Nov 18, 2026"/>
+  
+    
+    <script src="../_static/searchtools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <script src="../searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search..."
+         aria-label="Search..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+    
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../_static/sgl-omni-logo.svg" class="logo__image only-light" alt="SGLang - Home"/>
+    <img src="../_static/sgl-omni-logo.svg" class="logo__image only-dark pst-js-only" alt="SGLang - Home"/>
+  
+  
+</a></div>
+        <div class="sidebar-primary-item">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button></div>
+        <div class="sidebar-primary-item"><nav class="bd-links bd-docs-nav" aria-label="Main">
+    <div class="bd-toc-item navbar-nav active">
+        <p aria-level="2" class="caption" role="heading"><span class="caption-text">Get Started</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome to SGLang-Omni</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../get_started/troubleshooting.html">Troubleshooting</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Voxt</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="../get_started/voxt.html">Quickstart</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../get_started/voxt-tutorials/en/index.html">Voxt tutorials</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/en/start.html">Install Voxt and download a speech model</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/en/byok.html">Set up Voxt with your own API key (BYOK)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/en/translate.html">Translate with Voxt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/en/transcribe.html">Transcribe what you say with Voxt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/en/rewrite.html">Rewrite text with Voxt</a></li>
+</ul>
+</details></li>
+<li class="toctree-l2 has-children"><a class="reference internal" href="../get_started/voxt-tutorials/index.html">Voxt 上手教程</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/start.html">安装 Voxt 和下载语音识别模型</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/byok.html">用自己的 API Key 配置 Voxt（BYOK）</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/translate.html">用 Voxt 翻译</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/transcribe.html">用 Voxt 把说的话转录成文字</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../get_started/voxt-tutorials/rewrite.html">用 Voxt 改写文字（转写）</a></li>
+</ul>
+</details></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Other Platforms</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../other_platforms/installation_apple_silicon.html">Apple Silicon</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other_platforms/installation_npu.html">Ascend NPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other_platforms/installation_xpu.html">Intel XPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other_platforms/installation_cpu.html">Intel CPU</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../other_platforms/installation_musa.html">Moore Threads MUSA</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Cookbook</span></p>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="companies/qwen.html">Qwen</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="qwen3_tts.html">Qwen3-TTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="qwen3_omni.html">Qwen3-Omni</a></li>
+<li class="toctree-l2 current active"><a class="current reference internal" href="#">Qwen3-ASR</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/openmoss.html">OpenMOSS</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="moss_tts.html">MOSS-TTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="moss_tts_local.html">MOSS-TTS-Local</a></li>
+<li class="toctree-l2"><a class="reference internal" href="moss_transcribe_diarize.html">MOSS-Transcribe-Diarize</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/openai.html">OpenAI</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="whisper_asr.html">Whisper ASR</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/nvidia.html">NVIDIA</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="nemotron3_5_asr.html">Nemotron 3.5 ASR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nemotron_transcribe.html">Nemotron Transcribe</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nemotron_voicechat.html">NemotronLabs VoiceChat</a></li>
+<li class="toctree-l2"><a class="reference internal" href="personaplex.html">PersonaPlex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cosmos3_nano.html">Cosmos3 Nano serving</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nemotron_diarization.html">Nemotron 3 Diarization</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/fish_audio.html">Fish Audio</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="fishaudio_s2_pro.html">Fish Audio S2-Pro</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fishaudio_drama3.html">Fish Audio Drama 3</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/fun_audio_llm.html">FunAudioLLM</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="fun_cosyvoice3.html">Fun-CosyVoice3</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fun_asr.html">Fun-ASR-Nano</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/openbmb.html">OpenBMB</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="minicpm_o.html">MiniCPM-o</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/boson_ai.html">Boson AI</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="higgs_tts.html">Higgs TTS</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/minimax.html">MiniMax</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="minimax_music3.html">MiniMax Music 3</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/map.html">M·A·P</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="yue2.html">YuE2</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/inclusionai.html">InclusionAI</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="ming_omni.html">Ming-Omni</a></li>
+<li class="toctree-l2"><a class="reference internal" href="llada2_uni.html">LLaDA2.0-Uni</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ming_tts.html">Ming-Omni-TTS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ming3_asr.html">Ming-3.0-asr-tiny</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ming3_audio.html">Ming-3.0-audio-flash</a></li>
+<li class="toctree-l2"><a class="reference internal" href="ming3_tts.html">Ming-3.0-TTS</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/tencent.html">Tencent</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="auk.html">AuK</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hy_simulmt.html">Hy-SimulMT</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/zyphra.html">Zyphra</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="zonos2.html">Zonos2</a></li>
+<li class="toctree-l2"><a class="reference internal" href="zonos3.html">Zonos3</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/autoark_ai.html">AutoArk AI</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="arkasr.html">ARK-ASR-3B</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/mistral_ai.html">Mistral AI</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="voxtral_tts.html">Voxtral TTS</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="companies/dots_studio.html">Dots Studio</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="dots_tts.html">dots.tts</a></li>
+</ul>
+</details></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">General Usage</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/native_chat_stage.html">Native Chat Stage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/audio_translations.html">Audio Translations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/tts.html">TTS Model Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/asr.html">ASR Model Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/omni.html">Omni Model Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/process_topology.html">Process Topology, Replicas, and GPU Sharing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/tts_process_topology.html">TTS Process Topology</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/process_topology_migration.html">Process Topology Migration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/omni_router.html">SGLang-Omni Router</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/mps_dp.html">Same-GPU Data Parallelism with CUDA MPS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage/native_media_routes.html">Native Media Routes</a></li>
+</ul>
+<p aria-level="2" class="caption" role="heading"><span class="caption-text">Developer Reference</span></p>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/main.html">Architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/contribution_guide.html">Contribution Guide</a></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="../developer_reference/mlx/index.html">Native MLX</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="../developer_reference/mlx/long_audio.html">ASR long-recording measurements</a></li>
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/apiserver_design.html">API Server Design</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/pipeline.html">Pipeline Overview</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/config.html">Config</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/adding_parameters.html">Adding a Parameter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/communication.html">Communication</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/reference_encode_service.html">Reference Encode Service</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/profiler.html">Request-level profiler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/qwen3_asr_concurrency_profile.html">Qwen3-ASR High-Concurrency Benchmark and Bottleneck Profile</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/full_duplex_guide.html">Full-Duplex Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/tts_bench.html">TTS benchmark runbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/tts_model_integration.html">TTS Model Integration</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/asr_bench.html">ASR benchmark runbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/omni_offline_bench.html">MiniCPM-o offline benchmark runbook</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/rl_admin_control.html">RL Admin Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/ci_labels.html">CI Workflows and Labels</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../developer_reference/bump_version.html">Bumping the SGLang Pin</a></li>
+</ul>
+
+    </div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+
+<div class="sbt-scroll-pixel-helper"></div>
+
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item"><button class="sidebar-toggle primary-toggle btn btn-sm" title="Toggle primary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <span class="fa-solid fa-bars"></span>
+</button></div>
+      
+    </div>
+  
+  
+    <div class="header-article-items__end">
+      
+        <div class="header-article-item">
+
+<div class="article-header-buttons">
+
+
+
+
+
+<div class="dropdown dropdown-source-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Source repositories">
+    <i class="fab fa-github"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="https://github.com/sgl-project/sglang-omni" target="_blank"
+   class="btn btn-sm btn-source-repository-button dropdown-item"
+   title="Source repository"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fab fa-github"></i>
+  </span>
+<span class="btn__text-container">Repository</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/sgl-project/sglang-omni/blob/main/docs/cookbook/qwen3_asr.md?plain=1" target="_blank"
+   class="btn btn-sm btn-source-file-button dropdown-item"
+   title="Show source"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-code"></i>
+  </span>
+<span class="btn__text-container">Show source</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/sgl-project/sglang-omni/edit/main/docs/cookbook/qwen3_asr.md" target="_blank"
+   class="btn btn-sm btn-source-edit-button dropdown-item"
+   title="Suggest edit"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-pencil-alt"></i>
+  </span>
+<span class="btn__text-container">Suggest edit</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li><a href="https://github.com/sgl-project/sglang-omni/issues/new?title=Issue%20on%20page%20%2Fcookbook/qwen3_asr.html&body=Your%20issue%20content%20here." target="_blank"
+   class="btn btn-sm btn-source-issues-button dropdown-item"
+   title="Open an issue"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-lightbulb"></i>
+  </span>
+<span class="btn__text-container">Open issue</span>
+</a>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+
+
+<div class="dropdown dropdown-download-buttons">
+  <button class="btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Download this page">
+    <i class="fas fa-download"></i>
+  </button>
+  <ul class="dropdown-menu">
+      
+      
+      
+      <li><a href="../_sources/cookbook/qwen3_asr.md" target="_blank"
+   class="btn btn-sm btn-download-source-button dropdown-item"
+   title="Download source file"
+   data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file"></i>
+  </span>
+<span class="btn__text-container">.md</span>
+</a>
+</li>
+      
+      
+      
+      
+      <li>
+<button onclick="window.print()"
+  class="btn btn-sm btn-download-pdf-button dropdown-item"
+  title="Print to PDF"
+  data-bs-placement="left" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-file-pdf"></i>
+  </span>
+<span class="btn__text-container">.pdf</span>
+</button>
+</li>
+      
+  </ul>
+</div>
+
+
+
+
+<button onclick="toggleFullScreen()"
+  class="btn btn-sm btn-fullscreen-button pst-navbar-icon"
+  title="Fullscreen mode"
+  data-bs-placement="bottom" data-bs-toggle="tooltip"
+>
+  
+
+<span class="btn__icon-container">
+  <i class="fas fa-expand"></i>
+  </span>
+
+</button>
+
+
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div>
+
+
+<button class="btn btn-sm pst-navbar-icon search-button search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass fa-lg"></i>
+</button>
+<button class="sidebar-toggle secondary-toggle btn btn-sm pst-navbar-icon" title="Toggle secondary sidebar" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="fa-solid fa-list"></span>
+</button>
+</div></div>
+      
+    </div>
+  
+</div>
+</div>
+              
+              
+
+<div id="jb-print-docs-body" class="onlyprint">
+    <h1>Qwen3-ASR</h1>
+    <!-- Table of contents -->
+    <div id="print-main-content">
+        <div id="jb-print-toc">
+            
+            <div>
+                <h2> Contents </h2>
+            </div>
+            <nav aria-label="Page">
+                <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-configuration">Server Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choose-a-transcription-method">Choose a Transcription Method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transcribe-audio">Transcribe Audio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stream-transcription">Stream Transcription</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#realtime-audio">Realtime Audio</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#live-pcm-transcription">Live PCM transcription</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request-parameters">Request Parameters</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prompt-and-vocabulary-biasing">Prompt and Vocabulary Biasing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#language-hints">Language Hints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#long-audio">Long Audio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#platform-configuration">Platform Configuration</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ascend-npu-graph-execution">Ascend NPU graph execution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apple-silicon">Apple Silicon</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dflash-speculative-decoding">DFlash speculative decoding</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#per-request-plain-fallback">Per-request plain fallback</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmarking">Benchmarking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concurrency-tuning">Concurrency tuning</a></li>
+</ul>
+            </nav>
+        </div>
+    </div>
+</div>
+
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section class="tex2jax_ignore mathjax_ignore" id="qwen3-asr">
+<h1>Qwen3-ASR<a class="headerlink" href="#qwen3-asr" title="Link to this heading">#</a></h1>
+<p><a class="reference external" href="https://huggingface.co/Qwen/Qwen3-ASR-1.7B">Qwen3-ASR</a> is an audio transcription model served through the OpenAI-compatible <code class="docutils literal notranslate"><span class="pre">/v1/audio/transcriptions</span></code> endpoint. It accepts one uploaded audio file per request and returns text.</p>
+<p>Qwen3-ASR does not serve <code class="docutils literal notranslate"><span class="pre">/v1/audio/translations</span></code>; that route returns HTTP 400. The endpoint semantics, response formats, SSE lifecycle, and request parameters that Qwen3-ASR shares with the other ASR models are documented in <a class="reference internal" href="../basic_usage/asr.html"><span class="std std-doc">ASR Model Usage</span></a>; this page keeps the behavior specific to this checkpoint.</p>
+<section id="prerequisites">
+<h2>Prerequisites<a class="headerlink" href="#prerequisites" title="Link to this heading">#</a></h2>
+<p>Install <code class="docutils literal notranslate"><span class="pre">sglang-omni</span></code> by following the <a class="reference internal" href="../get_started/installation.html"><span class="std std-doc">CUDA installation</span></a>
+or <a class="reference internal" href="../other_platforms/installation_apple_silicon.html"><span class="std std-doc">Apple Silicon installation</span></a>,
+then download the model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">MODEL_REVISION</span><span class="o">=</span>7278e1e70fe206f11671096ffdd38061171dd6e5
+<span class="nv">MODEL_PATH</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>
+<span class="w">  </span>hf<span class="w"> </span>download<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--revision<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">MODEL_REVISION</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--quiet
+<span class="k">)</span><span class="s2">"</span>
+</pre></div>
+</div>
+</section>
+<section id="server-configuration">
+<h2>Server Configuration<a class="headerlink" href="#server-configuration" title="Link to this heading">#</a></h2>
+<p>Start the default CUDA server with the downloaded checkpoint:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">MODEL_PATH</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-name<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>Qwen3-ASR runs a single ASR stage on one GPU. Its default <code class="docutils literal notranslate"><span class="pre">auto</span></code> dtype follows
+the checkpoint configuration (BF16 for Qwen3-ASR-1.7B); pass
+<code class="docutils literal notranslate"><span class="pre">--asr.factory.dtype</span> <span class="pre">float16</span></code> to force FP16.
+Async decode is enabled by default, allowing the shared one-step-lookahead path
+to overlap host-side result processing with the next GPU decode forward. Without
+a draft it covers every decode batch size, even a single request; with the
+DFlash draft a single request decodes synchronously (see the DFlash section).
+Use <code class="docutils literal notranslate"><span class="pre">--asr.factory.enable_async_decode</span> <span class="pre">false</span></code> to disable it, or set the
+crossover with <code class="docutils literal notranslate"><span class="pre">--asr.factory.async_decode_min_batch_size</span></code>.
+The request builders also use the shared LM prefill-admission gate: prefill
+starts when 16 built requests are ready or after the oldest ready request waits
+40 ms. Once request-build work drains, a ready prefill is released immediately
+if decode is idle; while decode is active, it continues coalescing until the
+same request target or deadline. By default with a DFlash draft, a ready
+prefill is released as soon as request-build work drains, whether or not decode
+is active; set <code class="docutils literal notranslate"><span class="pre">--asr.factory.prefill_coalesce_after_builds_during_decode</span> <span class="pre">true</span></code>
+to keep coalescing during decode.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">MODEL_PATH</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-name<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>For a single 24 GB RTX 4090 (SM89), use the checked-in consumer profile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config<span class="w"> </span>examples/configs/qwen3_asr_rtx4090.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>This qualified profile keeps the model in BF16, limits the stage to 16 running
+requests, and sets <code class="docutils literal notranslate"><span class="pre">mem_fraction_static</span></code> to <code class="docutils literal notranslate"><span class="pre">0.65</span></code>. Its bounds are specific to
+the validated RTX 4090 layout; use the default configuration or a separately
+qualified profile on other GPU architectures.</p>
+<p>For a single 32 GB RTX 5090, use:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config<span class="w"> </span>examples/configs/qwen3_asr_rtx5090.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>This profile uses BF16, allows up to 16 running requests, and sets
+<code class="docutils literal notranslate"><span class="pre">mem_fraction_static=0.65</span></code>. See the
+<a class="reference external" href="https://github.com/sgl-project/sglang-omni/issues/1212">RTX 5090 benchmark report</a>
+for results measured on an earlier release.</p>
+<p>For example, force synchronous decode when comparing modes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--asr.factory.enable_async_decode<span class="w"> </span><span class="nb">false</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>Apple Silicon and Ascend NPU launch different configurations; see <a class="reference internal" href="#platform-configuration"><span class="std std-ref">Platform Configuration</span></a>.</p>
+</section>
+<section id="choose-a-transcription-method">
+<h2>Choose a Transcription Method<a class="headerlink" href="#choose-a-transcription-method" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Goal</p></th>
+<th class="head"><p>Method</p></th>
+<th class="head"><p>Audio input</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Transcribe a file</p></td>
+<td><p><a class="reference internal" href="#transcribe-audio"><span class="std std-ref">HTTP transcription</span></a></p></td>
+<td><p>Upload a complete file</p></td>
+</tr>
+<tr class="row-odd"><td><p>Receive text incrementally</p></td>
+<td><p><a class="reference internal" href="#stream-transcription"><span class="std std-ref">SSE transcription</span></a></p></td>
+<td><p>Upload a complete file before decoding starts</p></td>
+</tr>
+<tr class="row-even"><td><p>Transcribe live audio</p></td>
+<td><p><a class="reference internal" href="#live-pcm-transcription"><span class="std std-ref">Realtime WebSocket</span></a></p></td>
+<td><p>Send PCM audio packets as they arrive</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="transcribe-audio">
+<h2>Transcribe Audio<a class="headerlink" href="#transcribe-audio" title="Link to this heading">#</a></h2>
+<p>Send one uploaded file to <code class="docutils literal notranslate"><span class="pre">POST</span> <span class="pre">/v1/audio/transcriptions</span></code>. The request shape and
+the <code class="docutils literal notranslate"><span class="pre">response_format</span></code> semantics shared with the other ASR models are documented
+in <a class="reference internal" href="../basic_usage/asr.html#use-curl"><span class="std std-ref">ASR Model Usage</span></a>. Qwen3-ASR adds one detail:
+<code class="docutils literal notranslate"><span class="pre">verbose_json</span></code> reports one segment per transcribed chunk with that chunk’s real
+start and end timestamps, not word-level timestamps.</p>
+</section>
+<section id="stream-transcription">
+<h2>Stream Transcription<a class="headerlink" href="#stream-transcription" title="Link to this heading">#</a></h2>
+<p>Set <code class="docutils literal notranslate"><span class="pre">stream=true</span></code> to receive incremental transcript text over SSE. The event
+lifecycle, batching behavior, and the response formats that streaming accepts
+are shared and documented in
+<a class="reference internal" href="../basic_usage/asr.html#stream-transcription"><span class="std std-ref">ASR Model Usage</span></a>. Qwen3-ASR batches
+deltas for up to 50 ms by default, and EOS or another terminal condition flushes
+any buffered text before the final transcript event.</p>
+</section>
+<section id="realtime-audio">
+<h2>Realtime Audio<a class="headerlink" href="#realtime-audio" title="Link to this heading">#</a></h2>
+<section id="live-pcm-transcription">
+<h3>Live PCM transcription<a class="headerlink" href="#live-pcm-transcription" title="Link to this heading">#</a></h3>
+<p>SSE streaming starts decoding after a complete multipart upload. For live
+audio ingestion, mount the realtime WebSocket endpoint:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">MODEL_PATH</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-name<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--enable-realtime<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>Connect to <code class="docutils literal notranslate"><span class="pre">/v1/realtime?intent=transcription</span></code>, configure the session, and
+append base64-encoded mono 16 kHz PCM16 packets. <code class="docutils literal notranslate"><span class="pre">input_audio_buffer.commit</span></code>
+finalizes the active segment manually; server VAD also finalizes after the
+configured silence interval. Send <code class="docutils literal notranslate"><span class="pre">transcription.done</span></code> after the final packet
+to receive <code class="docutils literal notranslate"><span class="pre">transcription.completed</span></code>. <code class="docutils literal notranslate"><span class="pre">input_audio_buffer.clear</span></code> discards the
+current segment and any partial hypothesis derived from it while keeping the
+WebSocket session open for new audio.</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"session.update"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"session"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"English"</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"decode_interval_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">1000</span><span class="p">,</span>
+<span class="w">    </span><span class="nt">"turn_detection"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"server_vad"</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"threshold"</span><span class="p">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"prefix_padding_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">300</span><span class="p">,</span>
+<span class="w">      </span><span class="nt">"silence_duration_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">500</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">decode_interval_ms</span></code> is how much new audio arrives between partial decodes. It defaults to 2000 ms, must be at least 200 ms, and <code class="docutils literal notranslate"><span class="pre">null</span></code> restores the default. Like <code class="docutils literal notranslate"><span class="pre">language</span></code> and <code class="docutils literal notranslate"><span class="pre">turn_detection</span></code>, it can change only while no uncommitted audio is buffered; with server VAD that means before the first audio packet.</p>
+<p>Each periodic decode is an ordinary stateless Qwen3-ASR request over all audio
+in the active segment. After the first two refreshes, the server rolls five
+tokens back from the prior hypothesis and uses the retained text as the next
+prompt prefix. No decoder KV cache or worker affinity is retained. Segments are
+also finalized at the configured <code class="docutils literal notranslate"><span class="pre">audio_chunking.max_audio_clip_s</span></code> boundary
+(30 seconds by default).</p>
+<p>Partial results are full replacements, not append-only deltas:</p>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+<span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"transcription.segment"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"event_index"</span><span class="p">:</span><span class="w"> </span><span class="mi">7</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"segment_id"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"audio_start_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"audio_end_ms"</span><span class="p">:</span><span class="w"> </span><span class="mi">2000</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"text"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hello wor"</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"is_final"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">  </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"English"</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>A later event for the same <code class="docutils literal notranslate"><span class="pre">segment_id</span></code> replaces this text. <code class="docutils literal notranslate"><span class="pre">audio_start_ms</span></code>
+and <code class="docutils literal notranslate"><span class="pre">audio_end_ms</span></code> are the span of input audio the text was decoded from.
+A partial can trail the audio already sent, since audio that arrives while it
+decodes is left to the next partial. <code class="docutils literal notranslate"><span class="pre">audio_start_ms</span></code> stays fixed for the
+segment, including segments opened by the 30 second boundary, which have no
+<code class="docutils literal notranslate"><span class="pre">input_audio_buffer.speech_started</span></code> event. An event with
+<code class="docutils literal notranslate"><span class="pre">is_final=true</span></code> is immutable. <code class="docutils literal notranslate"><span class="pre">transcription.completed</span></code> contains the joined
+text from all final segments.</p>
+<p><code class="docutils literal notranslate"><span class="pre">language</span></code> is the language the segment was transcribed in, as Qwen3-ASR names it (for example <code class="docutils literal notranslate"><span class="pre">English</span></code>): the detected language, or the <code class="docutils literal notranslate"><span class="pre">language</span></code> hint when the session set one. <code class="docutils literal notranslate"><span class="pre">transcription.completed</span></code> carries the language of its last non-empty final segment. Both fields are <code class="docutils literal notranslate"><span class="pre">null</span></code> when the language is unknown.</p>
+<p>Append events are not idempotent. After a transport failure, reconnect and
+restart the transcription rather than retrying packets on the old session.
+Reconnecting resets uncommitted audio, partial hypotheses, VAD state, and Qwen
+rollback state.</p>
+<p>A minimal client appends 100 ms packets, commits the segment, and waits for the
+completed transcript:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">websockets</span>
+
+<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+    <span class="k">async</span> <span class="k">with</span> <span class="n">websockets</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span>
+        <span class="s2">"ws://localhost:8000/v1/realtime?intent=transcription"</span>
+    <span class="p">)</span> <span class="k">as</span> <span class="n">ws</span><span class="p">:</span>
+        <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"session.update"</span><span class="p">,</span>
+            <span class="s2">"session"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"language"</span><span class="p">:</span> <span class="s2">"English"</span><span class="p">},</span>
+        <span class="p">}))</span>
+        <span class="nb">print</span><span class="p">(</span><span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"tests/data/query_to_cars.wav"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">pcm16</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">pcm16</span><span class="p">),</span> <span class="mi">3200</span><span class="p">):</span>
+            <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"input_audio_buffer.append"</span><span class="p">,</span>
+                <span class="s2">"audio"</span><span class="p">:</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">pcm16</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">start</span> <span class="o">+</span> <span class="mi">3200</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(),</span>
+            <span class="p">}))</span>
+
+        <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"input_audio_buffer.commit"</span><span class="p">}))</span>
+        <span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">send</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"transcription.done"</span><span class="p">}))</span>
+
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="k">await</span> <span class="n">ws</span><span class="o">.</span><span class="n">recv</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">event</span><span class="p">[</span><span class="s2">"type"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"transcription.completed"</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">event</span><span class="p">[</span><span class="s2">"text"</span><span class="p">])</span>
+                <span class="k">break</span>
+
+<span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The example assumes the upload is already mono 16 kHz PCM16; the session takes
+packets as they arrive and does not resample them.</p>
+</section>
+</section>
+<section id="request-parameters">
+<h2>Request Parameters<a class="headerlink" href="#request-parameters" title="Link to this heading">#</a></h2>
+<section id="prompt-and-vocabulary-biasing">
+<h3>Prompt and Vocabulary Biasing<a class="headerlink" href="#prompt-and-vocabulary-biasing" title="Link to this heading">#</a></h3>
+<p>The endpoint accepts the shared ASR request fields (<code class="docutils literal notranslate"><span class="pre">file</span></code>, <code class="docutils literal notranslate"><span class="pre">model</span></code>,
+<code class="docutils literal notranslate"><span class="pre">language</span></code>, <code class="docutils literal notranslate"><span class="pre">response_format</span></code>, <code class="docutils literal notranslate"><span class="pre">temperature</span></code>, <code class="docutils literal notranslate"><span class="pre">stream</span></code>) described in
+<a class="reference internal" href="../basic_usage/asr.html#request-parameters"><span class="std std-ref">ASR Model Usage</span></a>. Three fields are
+specific to this checkpoint:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">prompt</span></code> — vocabulary biasing, described below.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code> — default <code class="docutils literal notranslate"><span class="pre">1.0</span></code>, valid range <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">2]</span></code>. Values above <code class="docutils literal notranslate"><span class="pre">1</span></code>
+discourage repeats and can stop a runaway loop on noisy or silent audio, but
+they also lower accuracy on clean audio, so keep <code class="docutils literal notranslate"><span class="pre">1.0</span></code> unless loops occur.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max_new_tokens</span></code> — per-request generation cap; the default is the stage
+limit.</p></li>
+</ul>
+<p>Biasing raises the model’s preference for the supplied terms. It does not
+force them: a term the audio does not contain will not be inserted, and an
+irrelevant list biases the model toward words that were never spoken, which
+hurts accuracy. A short, relevant list works best — in testing, accuracy
+stopped improving past roughly 20 terms, while latency kept growing because
+the text is prefilled with every request.</p>
+<p><code class="docutils literal notranslate"><span class="pre">verbose_json</span></code> uses the model adapter’s verbose response schema and includes
+duration-based usage (rounded-up audio seconds) when duration probing succeeds.</p>
+</section>
+<section id="language-hints">
+<h3>Language Hints<a class="headerlink" href="#language-hints" title="Link to this heading">#</a></h3>
+<p>When <code class="docutils literal notranslate"><span class="pre">language</span></code> is omitted, Qwen3-ASR detects the spoken language before
+transcribing. Set an explicit hint when the language is known or automatic
+detection is unreliable for short or ambiguous audio.</p>
+<p>Qwen3-ASR accepts the following 30 explicit language codes and their canonical names:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Codes</p></th>
+<th class="head"><p>Canonical names</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ar</span></code>, <code class="docutils literal notranslate"><span class="pre">yue</span></code>, <code class="docutils literal notranslate"><span class="pre">zh</span></code>, <code class="docutils literal notranslate"><span class="pre">cs</span></code>, <code class="docutils literal notranslate"><span class="pre">da</span></code>, <code class="docutils literal notranslate"><span class="pre">nl</span></code>, <code class="docutils literal notranslate"><span class="pre">en</span></code>, <code class="docutils literal notranslate"><span class="pre">fil</span></code>, <code class="docutils literal notranslate"><span class="pre">fi</span></code>, <code class="docutils literal notranslate"><span class="pre">fr</span></code></p></td>
+<td><p>Arabic, Cantonese, Chinese, Czech, Danish, Dutch, English, Filipino, Finnish, French</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">de</span></code>, <code class="docutils literal notranslate"><span class="pre">el</span></code>, <code class="docutils literal notranslate"><span class="pre">hi</span></code>, <code class="docutils literal notranslate"><span class="pre">hu</span></code>, <code class="docutils literal notranslate"><span class="pre">id</span></code>, <code class="docutils literal notranslate"><span class="pre">it</span></code>, <code class="docutils literal notranslate"><span class="pre">ja</span></code>, <code class="docutils literal notranslate"><span class="pre">ko</span></code>, <code class="docutils literal notranslate"><span class="pre">mk</span></code>, <code class="docutils literal notranslate"><span class="pre">ms</span></code></p></td>
+<td><p>German, Greek, Hindi, Hungarian, Indonesian, Italian, Japanese, Korean, Macedonian, Malay</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">fa</span></code>, <code class="docutils literal notranslate"><span class="pre">pl</span></code>, <code class="docutils literal notranslate"><span class="pre">pt</span></code>, <code class="docutils literal notranslate"><span class="pre">ro</span></code>, <code class="docutils literal notranslate"><span class="pre">ru</span></code>, <code class="docutils literal notranslate"><span class="pre">es</span></code>, <code class="docutils literal notranslate"><span class="pre">sv</span></code>, <code class="docutils literal notranslate"><span class="pre">th</span></code>, <code class="docutils literal notranslate"><span class="pre">tr</span></code>, <code class="docutils literal notranslate"><span class="pre">vi</span></code></p></td>
+<td><p>Persian, Polish, Portuguese, Romanian, Russian, Spanish, Swedish, Thai, Turkish, Vietnamese</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>For example, <code class="docutils literal notranslate"><span class="pre">language=es</span></code> and <code class="docutils literal notranslate"><span class="pre">language=Spanish</span></code> both force the prompt suffix
+<code class="docutils literal notranslate"><span class="pre">language</span> <span class="pre">Spanish&lt;asr_text&gt;</span></code>. The legacy <code class="docutils literal notranslate"><span class="pre">cn</span></code> and regional <code class="docutils literal notranslate"><span class="pre">zh-*</span></code> spellings are
+also accepted as Chinese. Unsupported language hints return HTTP 400 instead of
+silently falling back to English.</p>
+<p>The model also has ASR coverage for 22 Chinese dialects, but those dialect names
+are not supported as forced <code class="docutils literal notranslate"><span class="pre">language</span></code> hints; use <code class="docutils literal notranslate"><span class="pre">Chinese</span></code>/<code class="docutils literal notranslate"><span class="pre">zh</span></code> for them.</p>
+</section>
+</section>
+<section id="long-audio">
+<h2>Long Audio<a class="headerlink" href="#long-audio" title="Link to this heading">#</a></h2>
+<p>The current Qwen3-ASR model accepts at most 1,200 seconds of audio in one
+request, so we transcribe longer uploads in chunks: we split the audio, run
+each chunk as its own engine request, and join the transcripts back in
+order. The behavior follows two kinds of values.</p>
+<p>The shared <code class="docutils literal notranslate"><span class="pre">audio_chunking</span></code> flags, the aggregate guard, and the streaming
+limit are described in <a class="reference internal" href="../basic_usage/asr.html#long-audio"><span class="std std-ref">ASR Model Usage</span></a>;
+the defaults and limits below are Qwen3-ASR’s.</p>
+<p>The scheduling policy is yours to tune, with dotted flags or the matching
+YAML keys:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--audio_chunking.max_audio_clip_s</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">30</span></code></p></td>
+<td><p>Longest clip we send to the engine in one request, and therefore the chunk length. It sits well below the model’s native 1,200s on purpose: shorter chunks batch better, and the output-token budget scales with clip length on its own. Capped at the native clip limit.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--audio_chunking.max_concurrent_chunks</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">8</span></code></p></td>
+<td><p>How many chunks of one request run in the engine at once. A per-request cap so one long upload can’t crowd out everyone else’s requests.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--audio_chunking.max_total_audio_s</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">3600</span></code></p></td>
+<td><p>Upper limit on one upload; you get HTTP 400 above it. It bounds a single decoded waveform, not the total across uploads; that is the next knob’s job.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--audio_chunking.max_concurrent_long_audio_requests</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">max_running_requests</span> <span class="pre">//</span> <span class="pre">(2</span> <span class="pre">×</span> <span class="pre">max_concurrent_chunks)</span></code>, at least 1; <code class="docutils literal notranslate"><span class="pre">4</span></code> with the stock defaults</p></td>
+<td><p>How many long uploads the server admits at once. A long upload past the cap gets HTTP 503 instead of queueing; short uploads are never gated. The slot is taken before the upload is decoded and returned when its chunks are done.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The last knob is the aggregate guard. Each admitted upload holds its decoded
+waveform (float32 at 16 kHz, about 230 MB for an hour) and drives up to
+<code class="docutils literal notranslate"><span class="pre">max_concurrent_chunks</span></code> engine requests, so:</p>
+<ul class="simple">
+<li><p>decoded waveforms held at once are at most
+<code class="docutils literal notranslate"><span class="pre">max_concurrent_long_audio_requests</span> <span class="pre">×</span> <span class="pre">max_total_audio_s</span> <span class="pre">×</span> <span class="pre">16000</span> <span class="pre">×</span> <span class="pre">4</span></code> bytes
+(decoding itself has transient peaks above that);</p></li>
+<li><p>engine slots long audio can take together are at most
+<code class="docutils literal notranslate"><span class="pre">max_concurrent_long_audio_requests</span> <span class="pre">×</span> <span class="pre">max_concurrent_chunks</span></code>.</p></li>
+</ul>
+<p>The default keeps that product at half of <code class="docutils literal notranslate"><span class="pre">--asr.engine.max_running_requests</span></code>
+so short requests always have slots left. Setting the knob explicitly to a
+value whose product reaches <code class="docutils literal notranslate"><span class="pre">max_running_requests</span></code> logs a warning at startup:
+it is not an error, since extra chunks only queue in the engine, but short
+requests then wait behind long audio whenever it is saturated. Raising
+<code class="docutils literal notranslate"><span class="pre">max_running_requests</span></code> instead also resizes CUDA graph capture, so treat it
+as the GPU capacity knob and this one as the long-audio share of it.</p>
+<p>The model properties are ClassVars on <code class="docutils literal notranslate"><span class="pre">Qwen3ASRPipelineConfig</span></code>; no
+configuration path reaches them:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Value</p></th>
+<th class="head"><p>Meaning</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">allow_audio_chunking</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">true</span></code></p></td>
+<td><p>Qwen3-ASR transcribes an isolated chunk correctly, so chunking is on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_native_clip_s</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1200</span></code></p></td>
+<td><p>Longest clip the model takes as one request (its native limit). Streaming cannot chunk, so this is the streaming cutoff; the Torch MPS compatibility path resolves it to its qualified 60-second cap.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_tail_s</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+<td><p>Shortest final chunk worth transcribing; if the tail would be shorter, we move the previous cut earlier to absorb it. This matches the model’s own minimum input length.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Note: Raising <code class="docutils literal notranslate"><span class="pre">audio_chunking.max_audio_clip_s</span></code> also resizes the encoder CUDA-graph bucket
+ladder, which is derived from the chunk length: a longer chunk means more and
+larger captured graphs, and their static buffers stay resident for the life of
+the server (roughly 6.6 KB per token of ladder ceiling; at 1,200s the ceiling
+is 124,800 tokens). Budget for that when you raise the flag on small GPUs.</p>
+<p>Behavior notes:</p>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">verbose_json</span></code> returns one segment per chunk</strong> with the chunk’s real
+start/end timestamps – chunk-level granularity, not word-level (Qwen3-ASR
+does not emit word timestamps).</p></li>
+<li><p>A few unusual audio formats may not expose a readable duration; we fall
+back to the non-chunked path for those uploads.</p></li>
+<li><p>Streamed responses (<code class="docutils literal notranslate"><span class="pre">stream=true</span></code>) do not support chunking yet; a stream
+request runs as one engine request. CUDA accepts audio up to the
+model-native <code class="docutils literal notranslate"><span class="pre">max_native_clip_s</span></code> (1,200s), while Torch MPS accepts up to its
+qualified 60-second cap and returns HTTP 400 above that – use <code class="docutils literal notranslate"><span class="pre">stream=false</span></code>
+for longer uploads.</p></li>
+</ul>
+</section>
+<section id="known-limitations">
+<h2>Known Limitations<a class="headerlink" href="#known-limitations" title="Link to this heading">#</a></h2>
+<p>The limits shared with the other ASR models are listed in
+<a class="reference internal" href="../basic_usage/asr.html#known-limitations"><span class="std std-ref">ASR Model Usage</span></a>. Qwen3-ASR adds:</p>
+<ul class="simple">
+<li><p>The Torch MPS path caps both native and whole-upload requests at 60 seconds,
+rejects longer audio, and provides no token logprobs or sampling controls
+beyond <code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code>.</p></li>
+<li><p>Streaming requests cannot chunk and run as one engine request, bounded by
+<code class="docutils literal notranslate"><span class="pre">max_native_clip_s</span></code> (1,200 s) on CUDA and 60 seconds on Torch MPS. Use
+<code class="docutils literal notranslate"><span class="pre">stream=false</span></code> for longer uploads.</p></li>
+</ul>
+</section>
+<section id="platform-configuration">
+<h2>Platform Configuration<a class="headerlink" href="#platform-configuration" title="Link to this heading">#</a></h2>
+<section id="ascend-npu-graph-execution">
+<h3>Ascend NPU graph execution<a class="headerlink" href="#ascend-npu-graph-execution" title="Link to this heading">#</a></h3>
+<p>See <a class="reference internal" href="../other_platforms/installation_npu.html#qwen3-asr-graph-execution"><span class="std std-ref">Qwen3-ASR graph execution on Ascend NPU</span></a> for queue settings and runtime restrictions.</p>
+<p>After following the <a class="reference internal" href="../other_platforms/installation_npu.html"><span class="std std-doc">Ascend NPU installation guide</span></a>, start the server with the shared example.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span>--config<span class="w"> </span>examples/configs/qwen3_asr_ascend910.yaml<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>The example defaults to Qwen3-ASR-1.7B. To use 0.6B, add <code class="docutils literal notranslate"><span class="pre">--model-path</span> <span class="pre">Qwen/Qwen3-ASR-0.6B</span></code>. For a local checkpoint, pass its path with <code class="docutils literal notranslate"><span class="pre">--model-path</span></code> and the model identifier used in transcription requests with <code class="docutils literal notranslate"><span class="pre">--model-name</span></code>.</p>
+<p>This example uses eager LM decode and prefill to avoid truncated outputs observed in <a class="reference external" href="https://github.com/sgl-project/sglang-omni/pull/3199#discussion_r4510634009">targeted transcription checks on Ascend910_9362</a>, while retaining the default encoder graphs.</p>
+<p>DFlash has its own validated NPU examples on the same queue setup. NPU DFlash supports only greedy decoding (<code class="docutils literal notranslate"><span class="pre">temperature=0</span></code>): requests with a nonzero temperature are rejected because NPU verification uses argmax. NPU DFlash does not apply <code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code> yet: a value other than <code class="docutils literal notranslate"><span class="pre">1.0</span></code> returns HTTP 400, or uses ordinary decoding with <code class="docutils literal notranslate"><span class="pre">asr.factory.enable_plain_fallback</span></code>. For one Ascend device, use the BF16 eager example, which uses the same pinned draft that CUDA serves by default and sets <code class="docutils literal notranslate"><span class="pre">enable_async_decode:</span> <span class="pre">false</span></code> to retain the validated greedy, synchronous configuration:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span>--config<span class="w"> </span>examples/configs/qwen3_asr_1_7b_dflash_npu.yaml<span class="w"> </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>To enable draft and target verification decode graphs, select <code class="docutils literal notranslate"><span class="pre">examples/configs/qwen3_asr_1_7b_dflash_npu_graph.yaml</span></code> instead. Its request buckets are one and two; prefill and encoder remain eager, and Torch Compile stays disabled. Keep <code class="docutils literal notranslate"><span class="pre">SGLANG_DFLASH_EAGER_DRAFT_SAMPLER</span></code> unset or <code class="docutils literal notranslate"><span class="pre">0</span></code> to capture the reduced-vocabulary draft head. These buckets describe the validated example, not a platform concurrency limit or an optimal performance setting.</p>
+<p>Both NPU examples explicitly select <code class="docutils literal notranslate"><span class="pre">ascend</span></code> for target and draft attention. Direct factory callers must supply the same engine overrides and <code class="docutils literal notranslate"><span class="pre">enable_encoder_cuda_graph=False</span></code>. Keep effective <code class="docutils literal notranslate"><span class="pre">context_length</span></code>, including the audio/text prefix and verification reserve, within the pinned causal draft’s 32768-token attention window; a larger output budget or context override can exceed it. For offline serving, pass local snapshots with <code class="docutils literal notranslate"><span class="pre">--model-path</span></code> and <code class="docutils literal notranslate"><span class="pre">--asr.engine.speculative_draft_model_path</span></code>. Overlap, realtime, TP&gt;1, quantization and longer contexts remain outside this validation.</p>
+<p><a id="apple-silicon-torch-mps"></a></p>
+</section>
+<section id="apple-silicon">
+<h3>Apple Silicon<a class="headerlink" href="#apple-silicon" title="Link to this heading">#</a></h3>
+<p>Qwen3-ASR runs on Apple Silicon through a Torch/MPS compatibility path. Install
+with the <a class="reference internal" href="../other_platforms/installation_apple_silicon.html"><span class="std std-doc">Apple Silicon installer</span></a>
+and follow its environment-activation and <code class="docutils literal notranslate"><span class="pre">DYLD_LIBRARY_PATH</span></code> steps; TorchCodec
+needs Homebrew’s keg-only FFmpeg libraries on the path before the server starts.</p>
+<p>Pass an official PyTorch checkpoint such as <code class="docutils literal notranslate"><span class="pre">Qwen/Qwen3-ASR-0.6B</span></code>. The path uses
+one device (<code class="docutils literal notranslate"><span class="pre">tp_size=1</span></code>), greedy decoding, and the eager <code class="docutils literal notranslate"><span class="pre">torch_native</span></code>/<code class="docutils literal notranslate"><span class="pre">sdpa</span></code>
+profile:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">export</span><span class="w"> </span><span class="nv">DYLD_LIBRARY_PATH</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>brew<span class="w"> </span>--prefix<span class="w"> </span>ffmpeg@7<span class="k">)</span><span class="s2">/lib</span><span class="si">${</span><span class="nv">DYLD_LIBRARY_PATH</span><span class="p">:+:</span><span class="nv">$DYLD_LIBRARY_PATH</span><span class="si">}</span><span class="s2">"</span>
+
+sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span>Qwen/Qwen3-ASR-0.6B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-name<span class="w"> </span>Qwen/Qwen3-ASR-0.6B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--asr.engine.max_running_requests<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>Radix caching, chunked prefill, and CUDA graphs are not used by this path. The
+HTTP and SSE transcription interfaces above are the same as on CUDA;
+<code class="docutils literal notranslate"><span class="pre">stream=true</span></code> provides pseudo-streaming transcript deltas as tokens are decoded.
+The Apple path applies <code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code> but does not provide other sampling
+penalties or token logprobs yet.</p>
+<p>The initial Torch MPS profile is bounded to a 2,048-token KV budget, uses
+<code class="docutils literal notranslate"><span class="pre">audio_chunking.max_audio_clip_s</span></code> for non-streaming chunks (30 seconds by
+default), and caps native/whole-upload requests at 60 seconds. Values above
+that qualified limit are rejected.</p>
+</section>
+</section>
+<section id="dflash-speculative-decoding">
+<h2>DFlash speculative decoding<a class="headerlink" href="#dflash-speculative-decoding" title="Link to this heading">#</a></h2>
+<p>On one CUDA GPU, Qwen3-ASR-1.7B serves with its DFlash draft, <a class="reference external" href="https://huggingface.co/wilsonzheng0327/Qwen3-ASR-1.7B-dflash"><code class="docutils literal notranslate"><span class="pre">wilsonzheng0327/Qwen3-ASR-1.7B-dflash</span></code></a>, by default, at the revision <code class="docutils literal notranslate"><span class="pre">sglang_omni/speculative/draft_registry.py</span></code> pins. This holds when the model path that launches, from <code class="docutils literal notranslate"><span class="pre">--model-path</span></code> or a config file, is <code class="docutils literal notranslate"><span class="pre">Qwen/Qwen3-ASR-1.7B</span></code>, with or without an <code class="docutils literal notranslate"><span class="pre">&#64;&lt;revision&gt;</span></code> pin, or a Hugging Face cache snapshot of it, such as <code class="docutils literal notranslate"><span class="pre">${MODEL_PATH}</span></code> above. Other platforms serve without the draft, and so do a stage with <code class="docutils literal notranslate"><span class="pre">tp_size</span></code> above 1, any other checkpoint, Qwen3-ASR-0.6B included, and a copy outside the Hugging Face cache. The RTX 4090 and RTX 5090 profiles above turn it off, since they were validated without it.</p>
+<p>On one H200 over SeedTTS clips, with streamed responses and the prefix cache off, the draft on its defaults raised throughput 1.72x at 1 concurrent request, 1.42x at 4 and 1.22x at 16 on English clips and 1.58x, 1.38x and 1.17x on Chinese clips. It lowered p95 latency by 22–51% from 1 to 16 concurrent requests, with the same WER and CER. On one H100 over SeedTTS English clips with synchronous scheduling, the draft raised throughput 1.90x at 1 concurrent request, 1.56x at 4 and 1.39x at 16. It lowered p95 latency by 26–42% and the p95 of the first streamed text by 9–26%, with the same WER. With the clips repeated and the prefix cache on, it raised throughput 1.90x, 1.51x and 1.40x.</p>
+<p>Ascend NPU runs separate validated examples and is greedy only; see <a class="reference internal" href="#ascend-npu-graph-execution"><span class="std std-ref">Ascend NPU graph execution</span></a>.</p>
+<p>DFlash serves any <code class="docutils literal notranslate"><span class="pre">temperature</span></code>. Above 0, verification accepts each drafted token with the target model’s probability for it and otherwise samples from the target’s remaining probabilities. ASR transcripts are confident, so sampling barely lowers acceptance: on one H100 with SeedTTS English and Chinese clips at 16 concurrent requests, each verification step committed 5.66 tokens at <code class="docutils literal notranslate"><span class="pre">temperature</span></code> 0, 5.66 at 0.7 and 5.62 at 1.0. On the same server at the default cap of 64 running requests, the speedup at 0.7 and 1.0 stayed close to its greedy speedup at every load tested, from 1 to 64 concurrent requests. DFlash retains CUDA graphs.</p>
+<p>On CUDA, DFlash applies <code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code> as ordinary decoding does: each verified position is penalized over the transcript so far and the drafted tokens before it. On one H200 with every SeedTTS clip sent at 1.2, no request failed, transcripts differed from a synchronous server without the draft about as often as they do with no penalty (5 of 666 English, 2 of 1,010 Chinese, 1 request at a time), and the logged acceptance length fell by about 1%. The draft does not see the penalty, so a strong one lowers acceptance more: by about 15% at 2.0.</p>
+<p>The draft overlaps scheduling with host work by default; add <code class="docutils literal notranslate"><span class="pre">--asr.factory.enable_async_decode</span> <span class="pre">false</span></code> to schedule synchronously. On one H100 with greedy decoding and the prefix cache off, overlap ran at 1.12–1.26x synchronous scheduling on 60-second recordings, 1.01–1.15x on SeedTTS English clips and 0.99–1.15x on SeedTTS Chinese clips, from 1 to 64 concurrent requests, with the same WER and CER. On short clips it also removed the draft’s loss under load: at 64 concurrent requests the synchronous draft ran at 0.94x the server without a draft on English clips and 0.91x on Chinese, and the overlapped draft at 1.08x and 1.04x. Overlap runs one extra verify round per request, so the logged acceptance length drops (5.9 to 4.6 tokens on English clips), and streamed first text arrives about 2 ms later for one short clip at a time. A decode batch smaller than <code class="docutils literal notranslate"><span class="pre">--asr.factory.async_decode_min_batch_size</span></code>, or a prefill after which fewer requests than it are decoding, has its result processed before the next batch is chosen; other batches overlap. With the draft it defaults to 2, so a lone request decodes synchronously; without a draft it defaults to 1. On one H200 with SeedTTS clips sent once each and streamed, the prefix cache off, first streamed text p95 for one clip at a time matched the server without a draft at 2 (1.00x on English and Chinese), against 1.16x and 1.19x with overlap at every batch size. That costs about 5% of single-request throughput on English and 4% on Chinese; from 2 to 64 concurrent requests the two settings stayed within 3% of each other in throughput. At 4 on one H100, first streamed text for one clip at a time also matched the server without a draft, and throughput stayed within 5% of overlap except at 2 requests, where it was about 7% lower. Set it to 1 to overlap every batch.</p>
+<p>The H200 that measured 1.72x differed from the H100 under load: at the default cap of 64 running requests with the prefix cache off, the draft on its defaults gave no speedup at 32 concurrent requests and ran about 10% slower at 64, on both English and Chinese clips, with first streamed text p95 11–21% later than without the draft at both loads. Overlapping every batch had the same throughput, and synchronous scheduling lost the same throughput on English clips in an earlier sweep (<a class="reference external" href="https://github.com/sgl-project/sglang-omni/pull/3454">#3454</a>). To serve without the draft, add <code class="docutils literal notranslate"><span class="pre">disable_speculative_decoding</span></code>, which drops every <code class="docutils literal notranslate"><span class="pre">speculative_*</span></code> key from the stage:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--asr.engine.disable_speculative_decoding<span class="w"> </span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>Send the form field <code class="docutils literal notranslate"><span class="pre">return_spec_tokens_details=true</span></code> to get <code class="docutils literal notranslate"><span class="pre">sglext.spec_tokens_details</span></code> (<code class="docutils literal notranslate"><span class="pre">spec_accept_length</span></code>, <code class="docutils literal notranslate"><span class="pre">spec_accept_rate</span></code>, the draft counts and the per-verify histogram) on <code class="docutils literal notranslate"><span class="pre">json</span></code> and <code class="docutils literal notranslate"><span class="pre">verbose_json</span></code> responses and on the streamed <code class="docutils literal notranslate"><span class="pre">transcript.text.done</span></code> event. Audio long enough to be transcribed in chunks returns none. <code class="docutils literal notranslate"><span class="pre">spec_accept_rate</span></code> and <code class="docutils literal notranslate"><span class="pre">spec_num_proposed_drafts</span></code> are left out when no drafts were proposed or the draft width is adaptive.</p>
+<p>Realtime transcription sessions (<code class="docutils literal notranslate"><span class="pre">--enable-realtime</span></code>) use the draft too. On one H100 at the default memory fraction and cap of 64 running requests, SeedTTS English and Chinese clips and 60-second LongLibriHeavy recordings streamed at wall-clock pace, 1 to 16 sessions at a time, with server VAD or manual commit. No session hit an error or a protocol violation, WER stayed within 0.03 percentage points of the server without the draft, and the median time to a segment’s first partial was 11 to 28% lower with the synchronous draft, least at a 1000 ms decode interval, and to its final transcript 17 to 27% lower. Overlap on every batch gave the same transcripts and median latencies as the synchronous draft on SeedTTS English sessions with server VAD, 1 and 16 at a time, with no errors or protocol violations.</p>
+<p>The draft’s weights and KV cache come out of the stage’s memory fraction. On an 80 GB H100 at <code class="docutils literal notranslate"><span class="pre">--mem-fraction-static</span> <span class="pre">0.08</span></code>, as in the streaming cascade profiles, the KV cache holds 11,501 tokens with the draft and 20,705 without. At that fraction, 640 SeedTTS Chinese sessions, 16 at a time, ran with no errors.</p>
+<section id="per-request-plain-fallback">
+<h3>Per-request plain fallback<a class="headerlink" href="#per-request-plain-fallback" title="Link to this heading">#</a></h3>
+<p>Set <code class="docutils literal notranslate"><span class="pre">asr.factory.enable_plain_fallback</span></code> to route requests that DFlash cannot serve through ordinary decoding: requests that fit the target context but leave too little room for draft KV, and, off CUDA, requests that set <code class="docutils literal notranslate"><span class="pre">repetition_penalty</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--config<span class="w"> </span>examples/configs/qwen3_asr_1_7b_plain_fallback.yaml<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+</pre></div>
+</div>
+<p>This option requires synchronous DFlash on one CUDA GPU, with prefill CUDA graphs, mixed chunks, and DP attention disabled. Decode CUDA graphs and radix caching can stay enabled. Both paths share the target model and KV pool, and each path caches its prefixes separately.</p>
+<p>When both paths have work, the scheduler gives speculative batches one to two turns per plain turn, according to their live request counts. This reduces the cost of sparse fallback traffic on speculative requests, but increases latency for plain requests. The two-turn cap prevents plain requests from starving; it does not bound wall-clock waiting time because forward durations vary. Fallback requires synchronous decoding, while Qwen3-ASR DFlash on its own overlaps draft execution by default from 2 decoding requests, so even 0% fallback can cost throughput relative to the default DFlash server. Benchmark both request cohorts before enabling this option.</p>
+</section>
+</section>
+<section id="benchmarking">
+<h2>Benchmarking<a class="headerlink" href="#benchmarking" title="Link to this heading">#</a></h2>
+<p>The benchmark entry point, its metric definitions, and the flags shared by all
+ASR checkpoints are documented in
+<a class="reference internal" href="../basic_usage/asr.html#benchmarking"><span class="std std-ref">ASR Model Usage</span></a>. The command below pins
+the Qwen3-ASR model and dataset revisions used for the numbers in this page.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-path<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">MODEL_PATH</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-name<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span>
+
+<span class="c1"># Sweep the full SeedTTS EN set (1088 clips), 3 repeats per concurrency:</span>
+<span class="c1"># Set SERVER_GPU_PID to the server process PID reported by nvidia-smi.</span>
+python<span class="w"> </span>-m<span class="w"> </span>benchmarks.eval.benchmark_asr_seedtts<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--port<span class="w"> </span><span class="m">8000</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--gpu-process-pid<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">SERVER_GPU_PID</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--dataset-revision<span class="w"> </span>27f4c1adee83b5b29b7c4b375f6b976324bda308<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--model-revision<span class="w"> </span>7278e1e70fe206f11671096ffdd38061171dd6e5<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--concurrencies<span class="w"> </span><span class="m">1</span>,2,4,8,16,32,64<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--repeats<span class="w"> </span><span class="m">3</span><span class="w"> </span>--warmup
+</pre></div>
+</div>
+<p>Result fields, GPU sampling, and the provenance flags are documented in
+<a class="reference internal" href="../basic_usage/asr.html#benchmarking"><span class="std std-ref">ASR Model Usage</span></a> and the
+<a class="reference internal" href="../developer_reference/asr_bench.html"><span class="std std-doc">ASR benchmark runbook</span></a>.</p>
+<p>The ASR CI gate runs the selected ASR CI model preset on this same benchmark
+entry point (<code class="docutils literal notranslate"><span class="pre">tests/test_model/test_asr_ci_seedtts.py</span></code>). Qwen3-ASR remains
+the transcriber for the TTS and talker WER stages.</p>
+<p>For the current-main concurrency baseline, the fixed-baseline comparison, and
+the per-stage bottleneck decomposition (issue #1324), see
+<a class="reference internal" href="../developer_reference/qwen3_asr_concurrency_profile.html"><span class="std std-doc">Qwen3-ASR concurrency profile</span></a>.
+The benchmark’s <code class="docutils literal notranslate"><span class="pre">--profile-events</span></code>, <code class="docutils literal notranslate"><span class="pre">--sample-util</span></code>, <code class="docutils literal notranslate"><span class="pre">--save-raw-dir</span></code>, and
+<code class="docutils literal notranslate"><span class="pre">--fingerprint</span></code> flags capture the telemetry that report uses.</p>
+</section>
+<section id="concurrency-tuning">
+<h2>Concurrency tuning<a class="headerlink" href="#concurrency-tuning" title="Link to this heading">#</a></h2>
+<p>The request-build, admission, and CUDA-graph policy defaults come from a
+measured sweep (issue #1324 Q-PR5): <code class="docutils literal notranslate"><span class="pre">request_build_max_workers</span></code> {2, 4, 8} ×
+<code class="docutils literal notranslate"><span class="pre">request_build_max_pending</span></code> {16, 32, 64} × <code class="docutils literal notranslate"><span class="pre">max_running_requests</span></code> {16, 32, 64}
+with matching CUDA-graph coverage, each configuration a full SeedTTS EN
+concurrency sweep (1–64, three repeats plus warmup) on one 141 GB GPU with the
+pre-LM encoder enabled and its embedding cache disabled (unique-input regime).
+Requests/s by client concurrency:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>config (workers/pending/running)</p></th>
+<th class="head text-right"><p>c=8</p></th>
+<th class="head text-right"><p>c=16</p></th>
+<th class="head text-right"><p>c=32</p></th>
+<th class="head text-right"><p>c=64</p></th>
+<th class="head text-right"><p>shed at c=64</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>2 / 16 / 32</p></td>
+<td class="text-right"><p>39.1</p></td>
+<td class="text-right"><p>47.5</p></td>
+<td class="text-right"><p>52.3</p></td>
+<td class="text-right"><p>51.0</p></td>
+<td class="text-right"><p>704/3264</p></td>
+</tr>
+<tr class="row-odd"><td><p>4 / 16 / 32</p></td>
+<td class="text-right"><p>47.6</p></td>
+<td class="text-right"><p>60.3</p></td>
+<td class="text-right"><p>70.4</p></td>
+<td class="text-right"><p>55.4</p></td>
+<td class="text-right"><p>301/3264</p></td>
+</tr>
+<tr class="row-even"><td><p>8 / 16 / 32</p></td>
+<td class="text-right"><p>48.5</p></td>
+<td class="text-right"><p>75.6</p></td>
+<td class="text-right"><p>89.7</p></td>
+<td class="text-right"><p>64.6</p></td>
+<td class="text-right"><p>173/3264</p></td>
+</tr>
+<tr class="row-odd"><td><p>8 / 16 / 16</p></td>
+<td class="text-right"><p>57.6</p></td>
+<td class="text-right"><p>75.4</p></td>
+<td class="text-right"><p>42.2</p></td>
+<td class="text-right"><p>46.7</p></td>
+<td class="text-right"><p>250/3264</p></td>
+</tr>
+<tr class="row-even"><td><p>8 / 32 / 32</p></td>
+<td class="text-right"><p>57.7</p></td>
+<td class="text-right"><p>76.5</p></td>
+<td class="text-right"><p>87.1</p></td>
+<td class="text-right"><p>65.1</p></td>
+<td class="text-right"><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>8 / 64 / 32</p></td>
+<td class="text-right"><p>55.2</p></td>
+<td class="text-right"><p>76.6</p></td>
+<td class="text-right"><p>87.9</p></td>
+<td class="text-right"><p>64.7</p></td>
+<td class="text-right"><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>8 / 32 / 64 (default)</strong></p></td>
+<td class="text-right"><p>57.4</p></td>
+<td class="text-right"><p>77.0</p></td>
+<td class="text-right"><p>90.2</p></td>
+<td class="text-right"><p>96.8</p></td>
+<td class="text-right"><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>8 / 64 / 64</p></td>
+<td class="text-right"><p>57.0</p></td>
+<td class="text-right"><p>74.3</p></td>
+<td class="text-right"><p>88.8</p></td>
+<td class="text-right"><p>100.3</p></td>
+<td class="text-right"><p>0</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Reading, and the resulting defaults:</p>
+<ul class="simple">
+<li><p><strong>Build workers scale monotonically to 8</strong> at every concurrency ≥ 8 and cost
+nothing at concurrency 1 (0.099–0.101 s mean everywhere), so 8 is the
+default. Those workers do CPU request construction (decode audio,
+optional mel FFT) and submit encoder work asynchronously. When no extra
+builds are queued, the request builder waits for encode and returns a
+ready request like the sync path; when pending+backlog exceeds the
+worker pool, it returns a deferred admission so workers can pull the
+backlog. A cache hit still skips mel extraction entirely.</p></li>
+<li><p><strong>Pending 16 → 32 removes all concurrency-64 shedding</strong> and lifts
+concurrency-8 throughput ~19 %; 64 adds nothing further. 32 is the default.</p></li>
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">max_running_requests</span></code> 16 collapses concurrency 32</strong> (queue-bound) with no
+light-load latency benefit, so there is no latency-first case for lowering
+it. The default is 64 because it unlocks the concurrency-64 regime (+~50 %
+requests/s, zero shedding), at the price of larger CUDA-graph and KV memory.
+On memory-constrained GPUs, use the memory-conservative override:</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sgl-omni<span class="w"> </span>serve<span class="w"> </span>--model-path<span class="w"> </span>Qwen/Qwen3-ASR-1.7B<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--asr.engine.max_running_requests<span class="w"> </span><span class="m">32</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>Corpus WER stayed 0.0122 for every configuration at every level.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="qwen3_omni.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Qwen3-Omni</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="companies/openmoss.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">OpenMOSS</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item"><div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> Contents
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#prerequisites">Prerequisites</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#server-configuration">Server Configuration</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#choose-a-transcription-method">Choose a Transcription Method</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#transcribe-audio">Transcribe Audio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stream-transcription">Stream Transcription</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#realtime-audio">Realtime Audio</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#live-pcm-transcription">Live PCM transcription</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#request-parameters">Request Parameters</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#prompt-and-vocabulary-biasing">Prompt and Vocabulary Biasing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#language-hints">Language Hints</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#long-audio">Long Audio</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#known-limitations">Known Limitations</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#platform-configuration">Platform Configuration</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ascend-npu-graph-execution">Ascend NPU graph execution</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#apple-silicon">Apple Silicon</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dflash-speculative-decoding">DFlash speculative decoding</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#per-request-plain-fallback">Per-request plain fallback</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#benchmarking">Benchmarking</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#concurrency-tuning">Concurrency tuning</a></li>
+</ul>
+  </nav></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+<div class="bd-footer-content__inner container">
+  
+  <div class="footer-item">
+    
+<p class="component-author">
+By SGLang-Omni Team
+</p>
+
+  </div>
+  
+  <div class="footer-item">
+    
+
+  <p class="copyright">
+    
+      © Copyright 2025-2026, SGLang-Omni.
+      <br/>
+    
+  </p>
+
+  </div>
+  
+  <div class="footer-item">
+    <p class="last-updated">
+  Last updated on Nov 18, 2026.
+  <br/>
+</p>
+  </div>
+  
+  <div class="footer-item">
+    
+  </div>
+  
+</div>
+          </footer>
+        
+
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+
+  <footer class="bd-footer">
+  </footer>
+  </body>
+</html>
